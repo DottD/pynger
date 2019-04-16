@@ -1,0 +1,7 @@
+.vscode
+doc
+**/__pycache__/**
+pynger_DottD.egg-info
+build
+*.so
+dist
