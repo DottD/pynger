@@ -3,10 +3,10 @@
 current_dir := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 install:
-	python3 setup.py -q build_ext --inplace install
+	python3 setup.py --path ${NBISDIR} -q build_ext --inplace install
 	
 dev:
-	python3 setup.py -q build_ext --inplace develop
+	python3 setup.py --path ${NBISDIR} -q build_ext --inplace develop
 	
 clean:
 	python3 setup.py clean --all

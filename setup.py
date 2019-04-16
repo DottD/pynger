@@ -2,6 +2,16 @@ import sys
 from setuptools import setup, find_packages
 from distutils.core import Extension
 import numpy as np
+import argparse
+import os
+
+
+if '--path' in sys.argv:
+    index = sys.argv.index('--path')
+    sys.argv.pop(index)  # Removes the '--path'
+    nbispath = sys.argv.pop(index)  # Returns the element after the '--path'
+else:
+	nbispath = "/Users/MacD/Documents/Libraries/NBIS"
 
 # Set up the NBIS extension
 static_libraries = [
@@ -9,7 +19,7 @@ static_libraries = [
 	'fft', # enhnc
 	'an2k', 'mindtct', # mindtct
 	]
-static_lib_dir = '/Users/MacD/Documents/Libraries/NBIS/lib'
+static_lib_dir = os.path.join(nbispath, 'lib')
 libraries = []
 library_dirs = []
 
@@ -18,7 +28,7 @@ if sys.platform == 'win32':
 	library_dirs.append(static_lib_dir)
 	extra_objects = []
 else: # POSIX
-	extra_objects = ['{}/lib{}.a'.format(static_lib_dir, l) for l in static_libraries]
+	extra_objects = [os.path.join(static_lib_dir, 'lib{}.a'.format(l)) for l in static_libraries]
 
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
@@ -29,7 +39,7 @@ nbis_ext = Extension(
 		'pynger/fingerprint/nbismodule/rors.c',
 		'pynger/fingerprint/nbismodule/utils.c',
 		'pynger/fingerprint/nbismodule/mindtct.c'],
-	include_dirs=['/Users/MacD/Documents/Libraries/NBIS/include',
+	include_dirs=[os.path.join(nbispath, 'include'),
 		np.get_include()],
 	libraries=libraries,
 	library_dirs=library_dirs,
