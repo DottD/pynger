@@ -29,12 +29,12 @@ print("The following libraries will be linked:", static_libraries)
 libraries = []
 library_dirs = []
 
-# if sys.platform == 'win32':
-libraries.extend(static_libraries)
-library_dirs.append(static_lib_dir)
-extra_objects = []
-# else: # POSIX
-# 	extra_objects = [os.path.join(static_lib_dir, l) for l in static_libraries]
+if sys.platform == 'win32':
+	libraries.extend(static_libraries)
+	library_dirs.append(static_lib_dir)
+	extra_objects = []
+else: # POSIX
+	extra_objects = [os.path.join(static_lib_dir, 'lib{}.a'.format(l)) for l in static_libraries]
 
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
@@ -50,7 +50,6 @@ nbis_ext = Extension(
 	libraries=libraries,
 	library_dirs=library_dirs,
 	extra_objects=extra_objects,
-	extra_link_args=['-static'],
 	)
 	
 # Set up the anigauss extension

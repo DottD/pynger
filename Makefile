@@ -6,7 +6,7 @@ install:
 	python3 setup.py --path ${NBISDIR} build_ext install
 	
 dev:
-	python3 setup.py --path ${NBISDIR} -q build_ext --inplace develop
+	python3 setup.py --path ${NBISDIR} build_ext --inplace develop
 	
 clean:
 	python3 setup.py clean --all
