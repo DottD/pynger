@@ -49,7 +49,8 @@ nbis_ext = Extension(
 		np.get_include()],
 	libraries=libraries,
 	library_dirs=library_dirs,
-	extra_objects=extra_objects
+	extra_objects=extra_objects,
+	extra_link_args=['-static'],
 	)
 	
 # Set up the anigauss extension
