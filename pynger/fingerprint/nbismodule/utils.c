@@ -102,6 +102,7 @@ void build_2d_array_f(float*** array2d, float* flattened,
 	}
 }
 
+#ifdef PYNGER_DEBUG
 /* Print to stdout the values of the given 2D array */
 void print_2d_array_char(char** array2d, const size_t width, const size_t height)
 {
@@ -238,3 +239,4 @@ void print_array_2d(const unsigned char **p, const int nr, const int nc){
 	fprintf(fp, "]).reshape((%d, %d))\n", nr, nc);
    	fclose(fp);
 }
+#endif
