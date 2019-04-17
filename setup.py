@@ -19,7 +19,7 @@ static_libraries = []
 for r, d, f in os.walk(static_lib_dir):
     for file in f:
         if 'lib' in file:
-            static_libraries.append(file)
+            static_libraries.append(os.path.splitext(file)[0].replace('lib', ''))
 print("The following libraries will be linked:", static_libraries)
 
 libraries = []
