@@ -15,11 +15,15 @@ else:
 
 # Set up the NBIS extension
 static_lib_dir = os.path.join(nbispath, 'lib')
-static_libraries = []
-for r, d, f in os.walk(static_lib_dir):
-    for file in f:
-        if 'lib' in file:
-            static_libraries.append(os.path.splitext(file)[0].replace('lib', ''))
+static_libraries = [
+	'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', # sgmnt
+	'fft', # enhnc
+	'an2k', 'mindtct', # mindtct
+]
+# for r, d, f in os.walk(static_lib_dir):
+#     for file in f:
+#         if 'lib' in file:
+#             static_libraries.append(os.path.splitext(file)[0].replace('lib', ''))
 print("The following libraries will be linked:", static_libraries)
 
 libraries = []
