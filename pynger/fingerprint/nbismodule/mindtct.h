@@ -4,21 +4,15 @@
 #define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-// #include <pca.h>
 
-// #include "utils.h"
 #include <stdio.h>
 #include <stdbool.h>
-#include <lfs.h>
-// #include <sys/param.h>
-// #include <an2k.h>
+
+#include <lfs.h>3
 #include <morph.h>
 #include <mytime.h>
 #include <log.h>
-// #include <imgdecod.h>
 #include <imgboost.h>
-// #include <img_io.h>
-// #include <version.h>
 
 
 int custom_gen_image_maps(
