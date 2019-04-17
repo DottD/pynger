@@ -1,5 +1,22 @@
 #include "utils.h"
 
+#ifdef __linux__
+/************************************************************/
+/* Current_Time() gets the time of day from the system and  */
+/* returns an ASCII date string without a newline char.     */
+/************************************************************/
+char *current_time(void)
+{
+   long tm;
+   char *dptr;
+
+   tm = time((long *)NULL);
+   dptr = (char *)ctime(&tm);\
+   *(dptr + strlen(dptr) - 1) = '\0';
+   return(dptr);
+}
+#endif
+
 /* Convenience function that handles unsigned char array */
 /* Note: allocates the new array */
 void flatten_2d_array_b(unsigned char** flattened, unsigned char** array2d, 

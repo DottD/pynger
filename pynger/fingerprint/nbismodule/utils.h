@@ -5,8 +5,19 @@
 #include <stdbool.h>
 #include <math.h>
 // NBIS
+#ifdef __linux__
+#define current_time unused_function
+#endif
 #include <pca.h>
+#ifdef __linux__
+#undef current_time
+#endif
 // #define PYNGER_DEBUG
+
+#ifdef __linux__
+#include <time.h>
+char *current_time(void);
+#endif
 
 void flatten_2d_array_b(unsigned char** flattened, unsigned char** array2d, 
 	const size_t width, const size_t height, const bool realloc);
