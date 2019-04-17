@@ -14,7 +14,6 @@ else:
 	nbispath = "/Users/MacD/Documents/Libraries/NBIS"
 
 # Set up the NBIS extension
-# static_libraries = [ 'an2k', 'bozorth3', 'cblas', 'clapck', 'f2c', 'fet', 'fft', 'ihead', 'image', 'ioutil', 'jpegb', 'jpegl', 'mindtct', 'mlp', 'nfiq', 'nfseg', 'pca', 'pcautil', 'util', 'wsq']
 static_lib_dir = os.path.join(nbispath, 'lib')
 static_libraries = []
 for r, d, f in os.walk(static_lib_dir):
