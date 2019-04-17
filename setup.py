@@ -21,6 +21,7 @@ for r, d, f in os.walk(static_lib_dir):
     for file in f:
         if 'lib' in file:
             static_libraries.append(file)
+print("The following libraries will be linked:", static_libraries)
 
 libraries = []
 library_dirs = []
