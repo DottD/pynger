@@ -15,9 +15,26 @@ else:
 
 # Set up the NBIS extension
 static_libraries = [
-	'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', # sgmnt
-	'fft', # enhnc
-	'an2k', 'mindtct', # mindtct
+	'an2k',
+	'bozorth3',
+	'cblas',
+	'clapck',
+	'f2c',
+	'fet',
+	'fft',
+	'ihead',
+	'image',
+	'ioutil',
+	'jpegb',
+	'jpegl',
+	'mindtct',
+	'mlp',
+	'nfiq',
+	'nfseg',
+	'pca',
+	'pcautil',
+	'util',
+	'wsq',
 	]
 static_lib_dir = os.path.join(nbispath, 'lib')
 libraries = []
