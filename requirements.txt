@@ -1,0 +1,14 @@
+pip>=19.0.3 
+setuptools>=41.0.0
+wheel>=0.33.1 
+cma                          
+joblib                       
+matplotlib                   
+numpy                        
+pandas                       
+pathlib2                     
+Pillow                       
+python-telegram-bot          
+scikit-image                 
+scikit-learn                 
+scipy     
