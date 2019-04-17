@@ -20,7 +20,7 @@ static_libraries = []
 for r, d, f in os.walk(static_lib_dir):
     for file in f:
         if 'lib' in file:
-            static_libraries.append(os.path.join(r, file))
+            static_libraries.append(file)
 
 libraries = []
 library_dirs = []
@@ -30,7 +30,7 @@ if sys.platform == 'win32':
 	library_dirs.append(static_lib_dir)
 	extra_objects = []
 else: # POSIX
-	extra_objects = [os.path.join(static_lib_dir, 'lib{}.a'.format(l)) for l in static_libraries]
+	extra_objects = [os.path.join(static_lib_dir, l) for l in static_libraries]
 
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
