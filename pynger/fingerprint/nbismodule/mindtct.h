@@ -9,15 +9,15 @@
 #include "utils.h"
 #include <stdio.h>
 #include <lfs.h>
-#include <sys/param.h>
-#include <an2k.h>
+// #include <sys/param.h>
+// #include <an2k.h>
 #include <morph.h>
 #include <mytime.h>
 #include <log.h>
-#include <imgdecod.h>
+// #include <imgdecod.h>
 #include <imgboost.h>
-#include <img_io.h>
-#include <version.h>
+// #include <img_io.h>
+// #include <version.h>
 
 
 int custom_gen_image_maps(
