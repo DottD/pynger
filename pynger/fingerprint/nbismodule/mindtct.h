@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <lfs.h>3
+#include <lfs.h>
 #include <morph.h>
 #include <mytime.h>
 #include <log.h>
