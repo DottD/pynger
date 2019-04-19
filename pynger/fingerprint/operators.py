@@ -5,7 +5,6 @@ from pynger.field.manipulation import halve_angle, double_angle, normalize, magn
 from pynger.field.calculus import rot_2d
 from pynger.types import Mask, Field
 
-
 def _get_circle_coord(x, y, radius, num=100, indexing='xy'):
 	""" Returns the coordinates of a circle with given parameters.
 
@@ -39,7 +38,7 @@ def _get_circle_coord(x, y, radius, num=100, indexing='xy'):
 			y[:,:,None,None] + radius * np.cos(t)[None,None,None,:]))
 	else:
 		raise ValueError("Indexing must be either 'xy' or 'ij'")
-	
+
 def _interpolate_over_circles(field: int, radius, **kwargs):
 	""" Returns the field values along circles centered at each element, through interpolation.
 
@@ -75,7 +74,7 @@ def _interpolate_over_circles(field: int, radius, **kwargs):
 		facy.reshape((field.shape[0], field.shape[1], num))
 		), axis=2)
 	return fac
-	
+
 def generic_operator(field, **kwargs):
 	""" Computes a field operator according to the specification.
 	

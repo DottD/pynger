@@ -69,7 +69,7 @@ def LRF(image, lro, rel, **kwargs):
 	Keyword Args:
 		min_disk_size (int): size of the disk neighborhood of each point for the reliability check
 		rel_check_grid_step (int): step of the grid used for the reliability check
-		rel_check_threshold (float): threshold value used for the reliability check
+		rel_check_threshold (float): threshold value used for the reliability check (expressed as a percentile of the input rel matrix) (defaults to 30)
 		segment_n_points (int): number of points for each segment
 		segment_length (int): length of each segment (in pixels)
 		gaussian_smooth_std (float): standard deviation of gaussian filter used to smooth the signal on each segment (with respect to segment's length)
@@ -79,7 +79,7 @@ def LRF(image, lro, rel, **kwargs):
 	"""
 	min_disk_size = kwargs.get('min_disk_size', 10)
 	grid_step = kwargs.get('rel_check_grid_step', 10)
-	grid_thres = kwargs.get('rel_check_threshold', 0.5)
+	grid_thres = np.percentile(rel, kwargs.get('rel_check_threshold', 30))
 	sp_num = kwargs.get('segment_n_points', 15)
 	sp_len = kwargs.get('segment_length', 30)
 	sigma = kwargs.get('gaussian_smooth_std', 0.1)

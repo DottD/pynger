@@ -72,8 +72,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         return X
 
     def fit(self, X, y):
-        self.X_ = X
-        self.y_ = y
+        self.fitted_ = True
         # Fit the model on training data
         self.train_on_data(X, y)
         # Return the classifier
@@ -82,7 +81,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
     
     def predict(self, X):
         # Check is fit had been called
-        if not all([hasattr(self, attr) for attr in ['X_', 'y_']]):
+        if not (hasattr(self, 'fitted_') and self.fitted_):
             raise RuntimeError("You must call `fit` before predicting data!")
 
         # Input validation
@@ -229,7 +228,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         ortho_sigma: float = 1.0,
         LRF_min_disk_size: int = 10,
         LRF_rel_check_grid_step: int = 10,
-        LRF_rel_check_threshold: float = 0.5,
+        LRF_rel_check_threshold: float = 30,
         LRF_segment_n_points: int = 15,
         LRF_segment_length: int = 30,
         LRF_gaussian_smooth_std: float = 0.1,
@@ -238,10 +237,10 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         LRO1_along_sigma_ratio: float = 0.85,
         LRO1_ortho_sigma: float = 1.0,
         SM1_radius_factor: float = 1,
-        SM1_sample_dist: float = 1,
+        SM1_sample_dist: float = 3,
         SM1_relax: float = 1,
         DM1_radius_factor: float = 1,
-        DM1_sample_dist: float = 1,
+        DM1_sample_dist: float = 3,
         DM1_drift_threshold: float = 0.3,
         DM1_shrink_rad_factor: float = 3.5,
         DM1_blur_stddev: float = 0.5,
@@ -250,14 +249,14 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         LRO2_along_sigma_ratio: float = 0.85,
         LRO2_ortho_sigma: float = 1.0,
         SM2_radius_factor: float = 0.7,
-        SM2_sample_dist: float = 1,
+        SM2_sample_dist: float = 3,
         SM2_relax: float = 0.9,
         DMASK2_blur_stddev: float = 0.5,
         DMASK2_threshold: float = 0.3,
         DMASK2_ccomp_ext_thres: float = 1,
         DMASK2_dil_rad_factor: float = 3,
         DM3_radius_factor: float = 1,
-        DM3_sample_dist: float = 1,
+        DM3_sample_dist: float = 3,
         DM3_drift_threshold: float = 0.1,
         DM3_shrink_rad_factor: float = 3.5,
         DM3_ccomp_ext_thres: float = 0.75,
@@ -265,7 +264,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         IS_max_iterations: int = 10,
         IS_binlev_step: float = 0.01,
         IS_SMOOTH_radius_factor: float = 1.5,
-        IS_SMOOTH_sample_dist: float = 1.0,
+        IS_SMOOTH_sample_dist: float = 3,
         IS_SMOOTH_relaxation: float = 1.0,
         IS_DMASK_bin_level: float = 0.1,
         IS_GMASK_erode_rad_factor: float = 0.1,
@@ -392,16 +391,23 @@ class DisabledCV:
 
 
 if __name__ == '__main__':
-    from pynger.fingerprint.tuning import AnGaFISMatcher, NBISMatcher
     import PIL
     import numpy as np
+    import time, datetime
     filename1 = "/Users/MacD/Documents/Databases/temp/f0363_10.bmp"
-    filename2 = "/Users/MacD/Documents/Databases/temp/s0363_10.bmp"
+    # filename2 = "/Users/MacD/Documents/Databases/temp/s0363_10.bmp"
     readimg = lambda ff: np.array(PIL.Image.open(ff).convert('L'))
     left = readimg(filename1)
-    right = readimg(filename2)
-    X = [(left, right)]
-    an_score = AnGaFISMatcher().match_scores(X)
-    nb_score = NBISMatcher().match_scores(X)
+    # right = readimg(filename2)
+    # X = [(left, right)]
+    # an_score = AnGaFISMatcher().match_scores(X)
+    # nb_score = NBISMatcher().match_scores(X)
 
-    print(an_score, nb_score)
+    # print(an_score, nb_score)
+    estimator = AnGaFIS_OF_Estimator_Complete()
+    X = [estimator.serialize_Xrow(left[:508, :508], np.ones((61, 61), dtype=bool), [14, 14, 8, 8])]
+    y = np.ones_like(left)
+    estimator.fit(X, y)
+    start = time.time()
+    estimator.predict(X)
+    print('Done in', datetime.timedelta(seconds=int(time.time()-start)))
