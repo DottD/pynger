@@ -147,12 +147,12 @@ def generic_operator(field, **kwargs):
 	# Handle keyword arguments
 	use_fast = kwargs.get('use_fast', True)
 	radius = kwargs.get('radius', 15)
-	if radius <= 0:
+	if radius < 1:
 		warn("Generic operator: radius must be positive - the operator returns the input as is")
 		return field
 	step = kwargs.get('sample_dist', 1)
 	num = int(2 * np.pi * radius / step)
-	if num <= 0:
+	if num < 1:
 		warn("Generic operator: num must be positive - the operator returns the input as is")
 		return field
 	relax = kwargs.get('relaxation', 0.9)
