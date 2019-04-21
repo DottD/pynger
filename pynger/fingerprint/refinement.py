@@ -120,7 +120,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     else:
         period = LRF(image, *cart2polar(field, keepDims=False))
     
-    if period is None:
+    if period is None or period < 3:
         warn("Skipped iterative smoothing", RuntimeWarning)
         return field
 

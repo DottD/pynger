@@ -4,6 +4,7 @@ from pynger.signal.windows import circleWin
 from pynger.field.manipulation import halve_angle, double_angle, normalize, magnitude, dprod_2array, reflection
 from pynger.field.calculus import rot_2d
 from pynger.types import Mask, Field
+from warnings import warn
 
 def _get_circle_coord(x, y, radius, num=100, indexing='xy'):
 	""" Returns the coordinates of a circle with given parameters.
@@ -78,6 +79,8 @@ def _interpolate_over_circles(field: int, radius, **kwargs):
 def _fast_interp_over_circles(field, radius, num=100):
 	num = int(num)
 	radius = int(radius)
+	if not (num > 0 and radius > 0):
+		raise RuntimeError("Radius and num must be positive!")
 	# Create coordinates array 
 	i, j = np.meshgrid(range(field.shape[0]), range(field.shape[1]), indexing='ij')
 	coordinates = _get_circle_coord(0, 0, radius, num, indexing='ij')
@@ -144,8 +147,14 @@ def generic_operator(field, **kwargs):
 	# Handle keyword arguments
 	use_fast = kwargs.get('use_fast', True)
 	radius = kwargs.get('radius', 15)
+	if radius <= 0:
+		warn("Generic operator: radius must be positive - the operator returns the input as is")
+		return field
 	step = kwargs.get('sample_dist', 1)
 	num = int(2 * np.pi * radius / step)
+	if num <= 0:
+		warn("Generic operator: num must be positive - the operator returns the input as is")
+		return field
 	relax = kwargs.get('relaxation', 0.9)
 	if isinstance(relax, np.ndarray):
 		if len(relax.shape) != 2:
