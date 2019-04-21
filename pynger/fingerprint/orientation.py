@@ -119,14 +119,19 @@ def LRF(image, lro, rel, **kwargs):
 	if max_i.size==0 or max_j.size==0:
 		warn('No peak found in spectrum segments', RuntimeWarning)
 		return None
-	fs = 0.0
-	last = -1
-	for i,j in zip(max_i, max_j):
-		if i != last:
-			fs += j
-			last = i
-	fs *= sp_len / (2*smoothed.shape[0])
-	return fs
+	# fs = 0.0
+	# last = -1
+	# for i,j in zip(max_i, max_j):
+	# 	if i != last:
+	# 		fs += j
+	# 		last = i
+	# fs *= sp_len / (2*smoothed.shape[0])
+	# return fs
+	### 
+	mi, mi_idx = np.unique(max_i, return_index=True)
+	mj = max_j[mi_idx]
+	freq = np.fft.fftfreq(sp_num, d=(2*sp_len)/(sp_num-1))
+	return 1/np.interp(mj.mean(), np.arange(freq.size), freq)
 
 if __name__ == '__main__':	
 	# import argparse
