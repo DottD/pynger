@@ -5,3 +5,4 @@ pynger_DottD.egg-info
 build
 *.so
 dist
+joblib_cache

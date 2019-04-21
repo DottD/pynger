@@ -75,6 +75,37 @@ def _interpolate_over_circles(field: int, radius, **kwargs):
 		), axis=2)
 	return fac
 
+def _fast_interp_over_circles(field, radius, num=100):
+	num = int(num)
+	radius = int(radius)
+	# Create coordinates array 
+	i, j = np.meshgrid(range(field.shape[0]), range(field.shape[1]), indexing='ij')
+	coordinates = _get_circle_coord(0, 0, radius, num, indexing='ij')
+	coordinates = np.round(coordinates.squeeze()).astype(int)
+	# Swap dim-0 with dim-2 so that along the first dimension there are always (x,y) pairs
+	# A flip is mandatory since map_coordinates require (i,j) pairs along the first axis
+	# coordinates = np.moveaxis(coordinates, 2, 0).reshape(2,-1)
+	# Through interpolation recover field along circles (fac)
+	fx, fy = np.dsplit(field, 2)
+	###
+	fx = fx.squeeze()
+	fy = fy.squeeze()
+	###
+	r = radius
+	si = field.shape[0]
+	sj = field.shape[1]
+	fx = np.pad(fx, r, mode='edge')
+	fy = np.pad(fy, r, mode='edge')
+	lfx = [fx[r+mi:r+mi+si, r+mj:r+mj+sj] for mi, mj in coordinates.T]
+	lfy = [fy[r+mi:r+mi+si, r+mj:r+mj+sj] for mi, mj in coordinates.T]
+	###
+	facx = np.dstack(lfx)
+	facy = np.dstack(lfy)
+	###
+	# Reconstruct the array shape
+	fac = np.stack((facx, facy), axis=2)
+	return fac
+
 def generic_operator(field, **kwargs):
 	""" Computes a field operator according to the specification.
 	
@@ -99,6 +130,7 @@ def generic_operator(field, **kwargs):
 			- drifter 
 
 		norm_fix (bool): Whether the norm of the final field should be fixed (i.e. if True, it is not allowed that an element gets a norm lower than the initial one)
+		use_fast (bool): Whether the fast interpolation should be used
 		
 	Return:
 		numpy.array: The operator's output in doubled-angles format (same shape of input field).
@@ -110,6 +142,7 @@ def generic_operator(field, **kwargs):
 		:func:`drifterN`, :func:`drifterT`, :func:`smoother`, :func:`adjuster`
 	"""
 	# Handle keyword arguments
+	use_fast = kwargs.get('use_fast', True)
 	radius = kwargs.get('radius', 15)
 	step = kwargs.get('sample_dist', 1)
 	num = int(2 * np.pi * radius / step)
@@ -144,11 +177,20 @@ def generic_operator(field, **kwargs):
 	hfield = halve_angle(field)
 	nhfield = normalize(hfield)
 	if concordance in ['center_real_field', 'adjuster']:
-		f = _interpolate_over_circles(hfield, radius, num=num)
+		if use_fast:
+			f = _fast_interp_over_circles(hfield, radius, num=num)
+		else:
+			f = _interpolate_over_circles(hfield, radius, num=num)
 	elif concordance == 'drifter':
-		f = _interpolate_over_circles(nhfield, radius, num=num)
+		if use_fast:
+			f = _fast_interp_over_circles(nhfield, radius, num=num)
+		else:
+			f = _interpolate_over_circles(nhfield, radius, num=num)
 	else:
-		f = _interpolate_over_circles(field, radius, num=num)
+		if use_fast:
+			f = _fast_interp_over_circles(field, radius, num=num)
+		else:
+			f = _interpolate_over_circles(field, radius, num=num)
 	# Compute the signum, if required (1st part of the integral)
 	if concordance == 'center_real_field':
 		signum = np.sign(dprod_2array(f, hfield[:,:,:,None], axis=2, keepDims=True))
@@ -168,7 +210,10 @@ def generic_operator(field, **kwargs):
 		if concordance == 'drifter':
 			nhf = f
 		else:
-			nhf = _interpolate_over_circles(nhfield, radius, num=num)
+			if use_fast:
+				nhf = _fast_interp_over_circles(nhfield, radius, num=num)
+			else:
+				nhf = _interpolate_over_circles(nhfield, radius, num=num)
 		weight = dprod_2array(nhf, nvec, axis=2, keepDims=True)
 		# Square the dot product if required
 		if concordance != 'drifter':

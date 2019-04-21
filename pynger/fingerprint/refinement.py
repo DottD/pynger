@@ -52,7 +52,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     Keyword Args:
 		LRF__min_disk_size (int): size of the disk neighborhood of each point for the reliability check (defaults to 10)
 		LRF__rel_check_grid_step (int): step of the grid used for the reliability check (defaults to 10)
-		LRF__rel_check_threshold (float): threshold value used for the reliability check (defaults to 0.5)
+		LRF__rel_check_threshold (float): threshold value used for the reliability check (expressed as a percentile of the input rel matrix) (defaults to 30)
 		LRF__segment_n_points (int): number of points for each segment (defaults to 15)
 		LRF__segment_length (int): length of each segment (in pixels) (defaults to 30)
 		LRF__gaussian_smooth_std (float): standard deviation of gaussian filter used to smooth the signal on each segment (with respect to segment's length) (defaults to 0.1)

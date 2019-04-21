@@ -17,17 +17,17 @@ def LRO(image, **kwargs):
 		ridge_dist (int): estimated average distance between ridges (defaults to 10)
 		number_angles (int): number of angles to be tested (defaults to 36)
 		along_sigma_ratio (float): width of filter along the orientation (relative to ridge distance) (defaults to 0.85)
-		ortho_sigma (float): width of filter orthogonal to the orientation (relative to ridge distance) (defaults to 1.0)
+		ortho_sigma (float): width of filter orthogonal to the orientation (relative to ridge distance) (defaults to 0.05)
 		mask (numpy.array or None): Mask indicating the region of interest (same shape of image)
 		
 	Returns:
 		tuple of numpy.array: The LRO and its reliability.
 	"""
 	# Read parameters
-	ridge_dist = kwargs.get('ridge_dist', 10)
-	num = kwargs.get('number_angles', 16)
-	along_sigma = kwargs.get('along_sigma_ratio', 0.85) * ridge_dist
-	ortho_sigma = kwargs.get('ortho_sigma', 1.0) * ridge_dist
+	ridge_dist = kwargs.get('ridge_dist', 15)
+	num = kwargs.get('number_angles', 36)
+	along_sigma = kwargs.get('along_sigma_ratio', 0.3) * ridge_dist
+	ortho_sigma = kwargs.get('ortho_sigma', 0.05) * ridge_dist
 	# LRO Estimation
 	lro_x = np.zeros(image.shape)
 	lro_y = np.zeros_like(lro_x)
@@ -88,7 +88,7 @@ def LRF(image, lro, rel, **kwargs):
 	# Reliability check
 	min_rel = minimum_filter(rel, footprint=circleWin(min_disk_size))
 	checked = np.zeros(min_rel.shape, dtype=bool)
-	checked[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] = min_rel[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] > grid_thres
+	checked[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] = min_rel[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] >= grid_thres
 	del min_rel
 	I, J = np.nonzero(checked)
 	del checked
