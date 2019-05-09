@@ -1,12 +1,13 @@
 import pickle
 import time
 import datetime
+import itertools
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 
 from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart
-from pynger.fingerprint.FVC_utilities import convert_to_full, subsample
+from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.fingerprint.orientation import LRO
 from pynger.fingerprint.refinement import reliable_iterative_smoothing
 from pynger.types import Field, Image, List, Mask, Union
@@ -72,23 +73,13 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         return X
 
     def fit(self, X, y):
-        self.fitted_ = True
-        # Fit the model on training data
-        self.train_on_data(X, y)
-        # Return the classifier
-        return self
-
+        pass
     
     def predict(self, X):
-        # Check is fit had been called
-        if not (hasattr(self, 'fitted_') and self.fitted_):
-            raise RuntimeError("You must call `fit` before predicting data!")
-
         # Input validation
-        X = self.check_X(X)
+        # X = self.check_X(X)
 
         # Make prediction
-        pred_y = []
         for lineX in X:
             image, mask, specs = LROEstimator.deserialize_Xrow(lineX)
             bd_specs = {
@@ -98,21 +89,20 @@ class LROEstimator(BaseEstimator, RegressorMixin):
                 'step_y': specs[3],
             }
             field = self.compute_of(image, mask, **bd_specs)
-            pred_y.append(LROEstimator.serialize_yrow(field))
-
-        return pred_y
-
+            yield LROEstimator.serialize_yrow(field)
     
     def score(self, X, y=None):
         if y is None:
             raise ValueError("A true y must be given")
         # Check that X and y have correct shape
-        X, y = self.check_X_y(X, y)
+        # X, y = self.check_X_y(X, y)
+        # Split the iterator
+        X1, X2 = itertools.tee(X, 2)
         # Get the predicted y
-        pred_y = self.predict(X)
+        pred_y = self.predict(X1)
         # Accumulate the average error
         avgerr = []
-        for py, ty, x in zip(pred_y, y, X):
+        for py, ty, x in zip(pred_y, y, X2):
             # Load predicted and ground truth fields
             field = LROEstimator.deserialize_yrow(py)
             gfield = LROEstimator.deserialize_yrow(ty)

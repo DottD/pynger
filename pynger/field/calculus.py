@@ -54,6 +54,11 @@ def z_vprod(a, b):
 def rot_2d(field):
 	""" Returns the input field rotated counterclockwise by 90° """
 	fx, fy = np.dsplit(field, 2)
+	return np.dstack((-fy, fx))
+	
+def irot_2d(field):
+	""" Returns the input field rotated counterclockwise by 90° """
+	fx, fy = np.dsplit(field, 2)
 	return np.dstack((fy, -fx))
 	
 if '__main__' == __name__:

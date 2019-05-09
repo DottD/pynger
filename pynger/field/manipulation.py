@@ -80,9 +80,17 @@ def set_magnitude(field, magnitude):
 	"""
 	return polar2cart(angle(field), magnitude=magnitude, retField=True)
 	
-def normalize(field):
-	""" Normalizes the input field """
-	return set_magnitude(field, 1)
+def normalize(field, safe: bool = True):
+	""" Normalizes the input field.
+	
+	Args:
+		safe: when True, prevents null elements from being normalized
+	"""
+	if safe:
+		mag = magnitude(field, keepDims=False) > 0
+	else:
+		mag = 1
+	return set_magnitude(field, mag)
 	
 def reduce_2array(A, B, fun, axis=-1, initializer=0.0, keepDims=False):
 	"""

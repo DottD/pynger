@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 
 from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart
-from pynger.fingerprint.FVC_utilities import convert_to_full, subsample
+from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.fingerprint.orientation import LRO
 from pynger.fingerprint.refinement import reliable_iterative_smoothing
 from pynger.types import Field, Image, List, Mask, Union
