@@ -65,7 +65,7 @@ void fm::imageBimodalize(const Image__& src,
     double leftTailBreak = leftMean * leftCut;
     double rightTailBreak = rightMean * rightCut + (1.0-rightCut) * 255.0;
     /* Creo la trasformazione dei livelli di grigio (uso lo stesso vettore vec256Len) */
-    for(int k = 0; k < cv::saturate_cast<int>(histCount.n_elem); ++k){
+    for(int k = 0; k < cv::saturate_cast<int>((int)histCount.n_elem); ++k){
         double& x = positions[k];
         double& y = histCount[k];
         if (x <= leftTailBreak) y = 0.0;
