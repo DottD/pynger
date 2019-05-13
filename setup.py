@@ -89,8 +89,11 @@ ang_seg_args = ['-std=gnu++14']
 if sys.platform == 'darwin':
 	ang_seg_args += ['-F/System/Library/Frameworks -lAccelerate']
 else:
+	libpattern = re.compile('lib(.*)\\.a')
+	blaslibdir = os.path.join(blasdir, 'lib')
+	blaslibs = [m.group(1) for _, _, files in os.walk(blaslibdir) for m in filter(None, map(libpattern.match, files))]
 	ang_seg_libspecs.update({
-		os.path.join(blasdir, 'lib'): ['openblas'],
+		blaslibdir: blaslibs,
 		os.path.join(lapackdir, 'lib'): ['lapack'],
 	})
 ang_seg_ext = Extension(
