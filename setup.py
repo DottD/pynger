@@ -63,7 +63,7 @@ nbis_ext = Extension(
 		'pynger/fingerprint/nbismodule/utils.c',
 		'pynger/fingerprint/nbismodule/mindtct.c'],
 	include_dirs=[
-		os.path.join(lib_dir, 'include'),
+		os.path.join(nbisdir, 'include'),
 		np.get_include()],
 	**find_libs(nbisdir, {
 		'lib': [
