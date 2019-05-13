@@ -19,6 +19,7 @@ def rough_segmentation(image: Image, **kwargs):
         bin_level (int): number in the range [0,100] as a percentile used to binarize the image (defaults to 30)
         bin_close_radius (int): radius of binary closing performed on ridges to create a full mask (defaults to 10)
         bin_open_radius (int): radius of binary opening performed to smooth the full mask (defaults to 10)
+        crop (bool): if True the returned matrices will be cropped to the relevant part of the mask
     
     Return:
         A pair with the image and the foreground mask cropped to the relevant part of the mask, or (None, None) in case of an error.
@@ -35,11 +36,14 @@ def rough_segmentation(image: Image, **kwargs):
     struct_el = circleWin(kwargs.get('bin_open_radius', 10))
     mask = binary_opening(mask, structure=struct_el, iterations=1)
     # Crop image and mask
-    if np.count_nonzero(mask) == 0:
-        return None, None
-    i,j = mask.nonzero()
-    l, r, t, b = (j.min(), j.max(), i.min(), i.max())
-    return image[t:b,l:r], mask[t:b,l:r]
+    if kwargs.get('crop', True):
+        if np.count_nonzero(mask) == 0:
+            return None, None
+        i,j = mask.nonzero()
+        l, r, t, b = (j.min(), j.max(), i.min(), i.max())
+        return image[t:b,l:r], mask[t:b,l:r]
+    else:
+        return image, mask
 
 
 def angafis_preprocessing(image: Image, **kwargs):

@@ -1,10 +1,14 @@
 import os
+import re
+import io
 import numpy as np
-import PIL
+import PIL.Image
+import typing
 from pynger.types import Image, Mask, Field
 from pynger.fingerprint.tuning_lro import LROEstimator
 from pynger.fingerprint.sampling import convert_to_full
 from pynger.field.manipulation import polar2cart
+from pynger.misc import recursively_scan_dir_gen
 
 
 class Proxy:
@@ -147,7 +151,15 @@ class FieldProxy(Proxy):
                 put_uint8(a)
                 put_uint8(m)
 
-def loadDataset(path):
+def loadDataset(path: str,):
+    """ Loads the FVC-TEST dataset.
+
+    Args:
+        path: Directory with the FVC-TEST dataset.
+
+    Return:
+        A generator of pairs (X, y) where X has the original image, its mask and its border specifications, and y is the corresponding orientation field ground truth.
+    """
     with open(path, 'r') as f:
         _ = int(f.readline())
         for line in f:
@@ -175,3 +187,39 @@ def loadDataset(path):
 def countDatasetElements(path):
     with open(path, 'r') as f:
         return int(f.readline())
+
+def loadSegmentationDataset(sdir: str, odir: str):
+    """ Loads the dataset for segmentation evaluation.
+
+    Args:
+        sdir: Path to the segmented images; all the images shall be direct children of this directory.
+        odir: Path to the original images; this folder shall contain as direct children the folder of the databases FVC2000, FVC2002, FVC2004 (from DB1a, DB1b, to DB4a, DB4b) - e.g. the main root of the DVD shipped with Handbook of Fingerprint Recognition.
+
+    Note:
+        If some DB is not available a warning will be issued, but the other images will be loaded anyway.
+
+    Return:
+        A generator of pairs (X, y) where X is the original image, and y the corresponding ground truth segmentation image.
+    """
+    sfiles = recursively_scan_dir_gen(sdir, '.png')
+    basenames = map(os.path.basename, sfiles)
+    pattern = re.compile('(FVC\\d+)_(\\w+)_\\w+_(\\d+)_(\\d+)')
+    sfiles, matches = zip(*filter( # keep only the files that matches the pattern
+        lambda pair: pair[1] is not None, 
+        zip(sfiles, map(pattern.match, basenames)) ))
+    for sfile, specs in zip(sfiles, matches):
+        ofile = os.path.join(
+                odir,
+                specs[1], # FVCxxxx
+                'Dbs',
+                # converts DB1 to Db1, them appends an 'a' for the first 100 images, and a 'b' otherwise
+                specs[2].title() + '_' + ('a' if int(specs[3])<=100 else 'b'),
+                '{}_{}.tif'.format(specs[3], specs[4]) # append the filename
+                )
+        try:
+            y = np.array(PIL.Image.open(sfile).convert('L'))
+            X = np.array(PIL.Image.open(ofile).convert('L'))
+        except Exception as err:
+            print('Warning:', err)
+            continue
+        yield (X, y)

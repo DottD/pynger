@@ -1,16 +1,25 @@
 import datetime
+from random import sample
 import os
 import pickle
 import time
 import copy
+from random import sample as random_sample
 
 import cma
 import numpy as np
 import telegram
 import yaml
 from joblib import Parallel, delayed
-from sklearn.utils.random import sample_without_replacement
 
+
+def random_combination(iterable, r):
+    "Random selection from itertools.combinations(iterable, r)"
+    pool = tuple(iterable)
+    n = len(pool)
+    while True:
+        indices = sorted(sample(range(n), r))
+        yield tuple(pool[i] for i in indices)
 
 def static_var(varname, value):
     def decorate(func):
@@ -18,15 +27,14 @@ def static_var(varname, value):
         return func
     return decorate
 
-def cmaes_optimize(estimator, X, y,
+def cmaes_optimize(estimator_cls, reloadDS,
     param_space, fixed_variables, initial_params,
     **kwargs):
     """ Optimizes the parameters of estimator using the CMA-ES algorithm.
 
     Arguments:
-        estimator (sklearn.base.BaseEstimator): Estimator on which parameters optimization should be performed
-        X (iterable): Iterable of suitable inputs for the estimator
-        y (iterable): Iterable of suitable ground truth values for the estimator
+        estimator_cls (class): Estimator class on which parameters optimization should be performed
+        reloadDS (function): Function that returns or yields (preferable for large datasets) pairs of (X, y), where X are the inputs for the estimator and y are its ground truth values
         param_space (dict): Maps parameter names, even those fixed, to their bounds (es. {name: [min, max], ...})
         fixed_variables (dict): Maps parameter names to their fixed values
         initial_params (dict): Maps parameter names to their initial values (must be within the bounds)
@@ -58,6 +66,10 @@ def cmaes_optimize(estimator, X, y,
     # Get a list of independent keys
     nonfixed_keys = [key for key in param_space if key not in fixed_variables]
 
+    # Automatically determine the type of the parameter, based on the input type
+    nonfixed_types = list(map(type, (v for k,v in initial_params.items() if k in nonfixed_keys)))
+    type_fixing = lambda kwa: {kv[0]:t(kv[1]) for kv, t in zip(kwa.items(), nonfixed_types)}
+
     @static_var('prev_time', 0)
     def disp_cma_results(es, scale=None, names=None):
         """ Returns a description of the current CMA state """
@@ -74,7 +86,7 @@ def cmaes_optimize(estimator, X, y,
             datetime.timedelta(seconds=int(es.timer.elapsed)),
             datetime.timedelta(seconds=int(es.timer.elapsed-disp_cma_results.prev_time)),
             '\n\t- '.join( '_{}_ = {}'.format(key.replace('_',' '), val) 
-                for key, val in scale(dict(zip(names, es.pop_sorted[0]))).items() ),
+                for key, val in type_fixing(scale(dict(zip(names, es.pop_sorted[0])))).items() ),
             np.array2string(es.fit.fit, precision=4, separator=', ')
         )
         disp_cma_results.prev_time = es.timer.elapsed
@@ -104,6 +116,13 @@ def cmaes_optimize(estimator, X, y,
             kwac[key] += param_space[key][0]
         return kwac
 
+    # Define the logic for the creation of the sub-datasets
+    if sample_size < 0:
+        getXy = reloadDS
+    else:
+        Xy = random_combination( reloadDS(), sample_size ) # no replacement
+        getXy = lambda: next(Xy)
+
     def fit_fun(x):
         """ Evaluates the set of parameters x.
         
@@ -112,18 +131,11 @@ def cmaes_optimize(estimator, X, y,
         """
         kwa = dict(zip(nonfixed_keys, x))
         kwa = decode(kwa)
+        # Convert to appropriate types
+        kwa = type_fixing(kwa)
+        # Add the fixed variables before the computation
         kwa.update(fixed_variables)
-        est = copy.deepcopy(estimator)
-        est.set_params(**kwa)
-        if sample_size < 0:
-            XX = X[slice(len(X))]
-            yy = y[slice(len(X))]
-        else:
-            idx = sample_without_replacement(len(X), sample_size).tolist()
-            XX = [X[k] for k in idx]
-            yy = [y[k] for k in idx]
-        score = -est.score(XX, yy)
-        return score
+        return - estimator_cls(**kwa).score( *zip(*getXy()) )
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables
@@ -172,8 +184,9 @@ def cmaes_optimize(estimator, X, y,
     try:
         with Parallel(n_processes) as parallel:
             while not search_results.stop():
-                # Sample some solutions, test them and compute the update
+                # Sample some solutions
                 solutions = search_results.ask()
+                # --- verbose ---
                 if verbose and (np.array(solutions) < 0).any() or (np.array(solutions) > 1).any():
                     log = "Solutions out of bounds..."
                     print(log)
@@ -182,6 +195,8 @@ def cmaes_optimize(estimator, X, y,
                     except Exception as err:
                         print("Cannot send message to Bot due to", err)
                         continue
+                # ---------------
+                # Test them and compute the update
                 evals = parallel(delayed(fit_fun)(_x) for _x in solutions)
                 search_results.tell(solutions, evals)
                 # Save the parameter search results
@@ -192,7 +207,7 @@ def cmaes_optimize(estimator, X, y,
                 curpar = os.path.splitext(outDir)[0] + "_bestpar_{}.yml".format(curiter)
                 with open(curpar, 'w') as f:
                     yaml.dump(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist()))), f, Dumper=yaml.Dumper)
-                # Visualize progress information
+                # --- verbose ---
                 if verbose:
                     log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                     print(log)
@@ -201,6 +216,7 @@ def cmaes_optimize(estimator, X, y,
                     except Exception as err:
                         print("Cannot send message to Bot due to", err)
                         continue
+                # ---------------
     except KeyboardInterrupt:
         print("Interrupted by the user")
 
