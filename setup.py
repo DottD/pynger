@@ -1,4 +1,5 @@
 import sys
+import re
 from setuptools import setup, find_packages
 from distutils.core import Extension
 import numpy as np
