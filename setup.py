@@ -18,7 +18,7 @@ armadir = os.path.join(lib_dir, 'armadillo-install')
 blasdir = os.path.join(lib_dir, 'openblas-install')
 lapackdir = os.path.join(lib_dir, 'lp-install')
 cvdir = os.path.join(lib_dir, 'cv-install')
-nbisdir = os.path.join(lib_dir, 'NBIS')
+nbisdir = os.path.join(lib_dir, 'nbis-install')
 
 # Find all the libraries
 def find_libs(root: str, libs: dict):
