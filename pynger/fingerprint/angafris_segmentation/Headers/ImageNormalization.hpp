@@ -10,7 +10,7 @@
 #include <opencv2/opencv.hpp>
 #include <map>
 #include <exception>
-#define ARMA_DONT_USE_WRAPPER
+// #define ARMA_DONT_USE_WRAPPER
 #include <armadillo>
 #include "myMathFunc.hpp"
 
