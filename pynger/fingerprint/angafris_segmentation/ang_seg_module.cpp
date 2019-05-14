@@ -1,8 +1,10 @@
 #include <Python.h>
-#include <patchlevel.h>
-#define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
+extern "C" {
+	#include <patchlevel.h>
+	#define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
+	#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+	#include <numpy/arrayobject.h>
+}
 
 #include "Headers/myMathFunc.hpp"
 #include "Headers/AdaptiveThreshold.hpp"
@@ -14,6 +16,7 @@
 
 #include <exception>
 
+extern "C" {
 typedef struct {
 	double brightness;
 	double leftCut;
@@ -311,7 +314,8 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	// Read dimension and data
 	dim = PyArray_DIMS( (PyArrayObject*)array );
 	data = (npy_ubyte*)PyArray_DATA( (PyArrayObject*)array );
-
+	
+	extern "C++" {
 	try {
 		// Convert to OpenCV matrix
 		imageb = cv::Mat1b(dim[0], dim[1], data);
@@ -399,6 +403,8 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 		PyErr_SetString(PyExc_RuntimeError, "Generic exception catched while processing the input image");
 		return NULL;
 	}
+	
+	} // extern "C++"
 
 	// Allocate memory for the output arrays and assign their values
 	enh_img = PyArray_SimpleNew(2, dim, NPY_UBYTE);
@@ -433,3 +439,5 @@ PyMODINIT_FUNC PyInit_cangafris(void)
 	import_array();
 	return obj;
 }
+
+} // extern "C"
