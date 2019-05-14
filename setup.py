@@ -85,6 +85,7 @@ pani_ext = Extension(
 
 ang_seg_args = ['-std=gnu++14',
 	'-fdata-sections', '-ffunction-sections']
+ang_seg_link_args = []
 if sys.platform == 'darwin':
 	ang_seg_link_args += ['-dead_strip']
 else:
