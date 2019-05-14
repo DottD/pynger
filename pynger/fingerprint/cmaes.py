@@ -209,6 +209,7 @@ def cmaes_optimize(estimator_cls, reloadDS,
                     yaml.dump(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist()))), f, Dumper=yaml.Dumper)
                 # --- verbose ---
                 if verbose:
+                    print('{"metric": "Best Score", "value": {}}'.format(search_results.best.f))
                     log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                     print(log)
                     try:
