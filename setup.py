@@ -90,10 +90,8 @@ ang_seg_args = ['-std=gnu++14',
 	'-fdata-sections', '-ffunction-sections']
 ang_seg_link_args = []
 if sys.platform == 'darwin':
-	ang_seg_args += ['-stdlib=libc++']
 	ang_seg_link_args += ['-dead_strip']
 else:
-	ang_seg_args += ['-stdlib=libstdc++']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 
 if sys.platform == 'darwin':
