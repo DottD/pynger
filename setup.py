@@ -83,26 +83,12 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_libspecs = {
-	os.path.join(cvdir, 'lib'): ['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
-}
 ang_seg_args = ['-std=gnu++14',
 	'-fdata-sections', '-ffunction-sections']
 if sys.platform == 'darwin':
 	ang_seg_link_args += ['-dead_strip']
 else:
 	ang_seg_link_args += ['-Wl,--gc-sections']
-
-# if sys.platform == 'darwin':
-# 	ang_seg_args += ['-F/System/Library/Frameworks -lAccelerate']
-# else:
-# 	libpattern = re.compile('lib(.*)\\.a')
-# 	blaslibdir = os.path.join(blasdir, 'lib')
-# 	blaslibs = [m.group(1) for _, _, files in os.walk(blaslibdir) for m in filter(None, map(libpattern.match, files))]
-# 	ang_seg_libspecs.update({
-# 		blaslibdir: blaslibs,
-# 		os.path.join(lapackdir, 'lib'): ['lapack'],
-# 	})
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -123,8 +109,9 @@ ang_seg_ext = Extension(
 		os.path.join(cvdir, 'include/opencv4'),
 		],
 	**find_libs(
-		lib_dir,
-		ang_seg_libspecs
+		lib_dir, {
+			os.path.join(cvdir, 'lib'): ['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
+		}
 	),
 	extra_compile_args=ang_seg_args,
 	extra_link_args=ang_seg_link_args,
