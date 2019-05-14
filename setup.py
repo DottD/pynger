@@ -96,16 +96,16 @@ else:
 	ang_seg_args += ['-stdlib=libstdc++']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 
-# if sys.platform == 'darwin':
-# 	ang_seg_args += ['-F/System/Library/Frameworks -lAccelerate']
-# else:
-# 	libpattern = re.compile('lib(.*)\\.a')
-# 	blaslibdir = os.path.join(blasdir, 'lib')
-# 	blaslibs = [m.group(1) for _, _, files in os.walk(blaslibdir) for m in filter(None, map(libpattern.match, files))]
-# 	ang_seg_libspecs.update({
-# 		blaslibdir: blaslibs,
-# 		os.path.join(lapackdir, 'lib'): ['lapack'],
-# 	})
+if sys.platform == 'darwin':
+	ang_seg_args += ['-F/System/Library/Frameworks -lAccelerate']
+else:
+	libpattern = re.compile('lib(.*)\\.a')
+	blaslibdir = os.path.join(blasdir, 'lib')
+	blaslibs = [m.group(1) for _, _, files in os.walk(blaslibdir) for m in filter(None, map(libpattern.match, files))]
+	ang_seg_libspecs.update({
+		blaslibdir: blaslibs,
+		os.path.join(lapackdir, 'lib'): ['lapack'],
+	})
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
