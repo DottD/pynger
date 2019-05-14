@@ -86,7 +86,16 @@ pani_ext = Extension(
 ang_seg_libspecs = {
 	os.path.join(cvdir, 'lib'): ['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
 }
-ang_seg_args = ['-std=gnu++14']
+ang_seg_args = ['-std=gnu++14',
+	'-fdata-sections', '-ffunction-sections']
+ang_seg_link_args = []
+if sys.platform == 'darwin':
+	ang_seg_args += ['-stdlib=libc++']
+	ang_seg_link_args += ['-dead_strip']
+else:
+	ang_seg_args += ['-stdlib=libstdc++']
+	ang_seg_link_args += ['-Wl,--gc-sections']
+
 # if sys.platform == 'darwin':
 # 	ang_seg_args += ['-F/System/Library/Frameworks -lAccelerate']
 # else:
@@ -108,6 +117,7 @@ ang_seg_ext = Extension(
 		'pynger/fingerprint/angafris_segmentation/Sources/ImageSignificantMask.cpp',
 		'pynger/fingerprint/angafris_segmentation/Sources/myMathFunc.cpp',
 		'pynger/fingerprint/angafris_segmentation/Sources/TypesTraits.cpp',
+		'pynger/fingerprint/angafris_segmentation/Sources/ang_seg_wrapper.cpp',
 		'pynger/fingerprint/angafris_segmentation/ang_seg_module.cpp',
 		],
 	include_dirs=[
@@ -120,6 +130,7 @@ ang_seg_ext = Extension(
 		ang_seg_libspecs
 	),
 	extra_compile_args=ang_seg_args,
+	extra_link_args=ang_seg_link_args,
 	)
 
 # Load README file

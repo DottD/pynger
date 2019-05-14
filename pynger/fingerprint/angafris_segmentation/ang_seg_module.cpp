@@ -1,93 +1,15 @@
+#include <stdlib.h>
 #include <Python.h>
 extern "C" {
-	#include <patchlevel.h>
-	#define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
-	#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-	#include <numpy/arrayobject.h>
+#include <patchlevel.h>
+#define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 }
 
-#include "Headers/myMathFunc.hpp"
-#include "Headers/AdaptiveThreshold.hpp"
-#include "Headers/ImageSignificantMask.hpp"
-#include "Headers/ImageRescale.hpp"
-#include "Headers/ImageNormalization.hpp"
-#include "Headers/ImageMaskSimplify.hpp"
-#include "Headers/ImageCropping.hpp"
-
-#include <exception>
+#include "Headers/ang_seg_wrapper.hpp"
 
 extern "C" {
-typedef struct {
-	double brightness;
-	double leftCut;
-	double rightCut;
-	int histSmooth;
-	int reparSmooth;
-} _ImageBimodalize;
-typedef struct {
-	double minVariation;
-	int marg;
-} _ImageCroppingSimple;
-typedef struct {
-	double scanAreaAmount;
-	double gradientFilterWidth;
-	int gaussianFilterSide;
-	double binarizationLevel;
-	double f;
-	double slopeAngle;
-	double lev;
-	int marg;
-} _TopMask;
-typedef struct {
-	int medFilterSide;
-	int gaussFilterSide;
-	int minFilterSide;
-	double binLevVarMask;
-	int dilate1RadiusVarMask;
-	int erodeRadiusVarMask;
-	int dilate2RadiusVarMask;
-	int maxCompNumVarMask;
-	int minCompThickVarMask;
-	int maxHolesNumVarMask;
-	int minHolesThickVarMask;
-	int histeresisThreshold1Gmask;
-	int histeresisThreshold2Gmask;
-	int radiusGaussFilterGmask;
-	double minMeanIntensityGmask;
-	int dilate1RadiusGmask;
-	int erodeRadiusGmask;
-	int dilate2RadiusGmask;
-	int maxCompNumGmask;
-	int minCompThickGmask;
-	int maxHolesNumGmask;
-	int minHolesThickGmask;
-	int histeresisThreshold3Gmask;
-	int histeresisThreshold4Gmask;
-	int dilate3RadiusGmask;
-	int erode2RadiusGmask;
-	int histeresisThreshold5Gmask;
-	int histeresisThreshold6Gmask;
-	int dilate4RadiusGmask;
-	int radiusGaussFilterComp;
-	double meanIntensityCompThreshold;
-	int dilateFinalRadius;
-	int erodeFinalRadius;
-	int smoothFinalRadius;
-	int maxCompNumFinal;
-	int minCompThickFinal;
-	int maxHolesNumFinal;
-	int minHolesThickFinal;
-	int fixedFrameWidth;
-	int smooth2FinalRadius;
-} _ImageSignificantMask;
-typedef struct {
-	int minMaxFilter;
-	double mincp1;
-	double mincp2;
-	double maxcp1;
-	double maxcp2;
-} _ImageEqualize;
-
 PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 {
 	// Declarations
@@ -96,8 +18,6 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	unsigned char* data;
 	PyObject *enh_img, *fg_mask; // output
 	unsigned char *enh_img_data, *fg_mask_data;
-    cv::Mat1b imageb, mask; // working variables
-    cv::Mat1d imaged;
 
 	// Parameters declarations and defaults
 	_ImageBimodalize ImageBimodalize = {
@@ -314,106 +234,20 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	// Read dimension and data
 	dim = PyArray_DIMS( (PyArrayObject*)array );
 	data = (npy_ubyte*)PyArray_DATA( (PyArrayObject*)array );
-	
-	extern "C++" {
-	try {
-		// Convert to OpenCV matrix
-		imageb = cv::Mat1b(dim[0], dim[1], data);
-		imageb.convertTo(imaged, CV_64F, 1, 0);
-		
-		// Set the initial mask
-		mask = cv::Mat1b::ones(imaged.size()) * MASK_TRUE;
-		// Processing
-		fm::imageBimodalize(imaged, imaged,
-							ImageBimodalize.brightness,
-							ImageBimodalize.leftCut,
-							ImageBimodalize.rightCut,
-							ImageBimodalize.histSmooth,
-							ImageBimodalize.reparSmooth);
-		fm::ImageCroppingSimple(imaged, mask,
-							ImageCroppingSimple.minVariation,
-							ImageCroppingSimple.marg);
-		fm::ImageCroppingLines(imaged, mask,
-							TopMask.scanAreaAmount,
-							TopMask.gradientFilterWidth,
-							TopMask.gaussianFilterSide,
-							TopMask.binarizationLevel,
-							TopMask.f,
-							TopMask.slopeAngle,
-							TopMask.lev,
-							TopMask.marg);
-		fm::ImageSignificantMask(imaged, mask,
-							ImageSignificantMask.medFilterSide,
-							ImageSignificantMask.gaussFilterSide,
-							ImageSignificantMask.minFilterSide,
-							ImageSignificantMask.binLevVarMask,
-							ImageSignificantMask.dilate1RadiusVarMask,
-							ImageSignificantMask.erodeRadiusVarMask,
-							ImageSignificantMask.dilate2RadiusVarMask,
-							ImageSignificantMask.maxCompNumVarMask,
-							ImageSignificantMask.minCompThickVarMask,
-							ImageSignificantMask.maxHolesNumVarMask,
-							ImageSignificantMask.minHolesThickVarMask,
-							ImageSignificantMask.histeresisThreshold1Gmask,
-							ImageSignificantMask.histeresisThreshold2Gmask,
-							ImageSignificantMask.radiusGaussFilterGmask,
-							ImageSignificantMask.minMeanIntensityGmask,
-							ImageSignificantMask.dilate1RadiusGmask,
-							ImageSignificantMask.erodeRadiusGmask,
-							ImageSignificantMask.dilate2RadiusGmask,
-							ImageSignificantMask.maxCompNumGmask,
-							ImageSignificantMask.minCompThickGmask,
-							ImageSignificantMask.maxHolesNumGmask,
-							ImageSignificantMask.minHolesThickGmask,
-							ImageSignificantMask.histeresisThreshold3Gmask,
-							ImageSignificantMask.histeresisThreshold4Gmask,
-							ImageSignificantMask.dilate3RadiusGmask,
-							ImageSignificantMask.erode2RadiusGmask,
-							ImageSignificantMask.histeresisThreshold5Gmask,
-							ImageSignificantMask.histeresisThreshold6Gmask,
-							ImageSignificantMask.dilate4RadiusGmask,
-							ImageSignificantMask.radiusGaussFilterComp,
-							ImageSignificantMask.meanIntensityCompThreshold,
-							ImageSignificantMask.dilateFinalRadius,
-							ImageSignificantMask.erodeFinalRadius,
-							ImageSignificantMask.smoothFinalRadius,
-							ImageSignificantMask.maxCompNumFinal,
-							ImageSignificantMask.minCompThickFinal,
-							ImageSignificantMask.maxHolesNumFinal,
-							ImageSignificantMask.minHolesThickFinal,
-							ImageSignificantMask.fixedFrameWidth,
-							ImageSignificantMask.smooth2FinalRadius);
-		mask = mask > 0; // Make sure mask is 0,255 valued
-		fm::ImageEqualize(imaged, imaged,
-						ImageEqualize.minMaxFilter,
-						ImageEqualize.mincp1,
-						ImageEqualize.mincp2,
-						ImageEqualize.maxcp1,
-						ImageEqualize.maxcp2,
-						mask);
-
-		// Convert bask to unsigned char matrix
-		imaged.convertTo(imageb, CV_8U, 255, 0);
-	} catch(const std::exception& ex) {
-		char msg[300];
-		sprintf(msg, "Exception catched while processing the input image: %s\n", ex.what());
-		PyErr_SetString(PyExc_RuntimeError, msg);
-		return NULL;
-	} catch(...) {
-		PyErr_SetString(PyExc_RuntimeError, "Generic exception catched while processing the input image");
-		return NULL;
-	}
-	
-	} // extern "C++"
 
 	// Allocate memory for the output arrays and assign their values
 	enh_img = PyArray_SimpleNew(2, dim, NPY_UBYTE);
 	enh_img_data = (unsigned char*)PyArray_DATA( (PyArrayObject*)enh_img );
-	memcpy(enh_img_data, imageb.data, sizeof(unsigned char)*dim[0]*dim[1]);
 
 	fg_mask = PyArray_SimpleNew(2, dim, NPY_UBYTE);
 	fg_mask_data = (unsigned char*)PyArray_DATA( (PyArrayObject*)fg_mask );
-	memcpy(fg_mask_data, mask.data, sizeof(unsigned char)*dim[0]*dim[1]);
+	
+	// Segment the image
+	char* seg_error = segmentation(data, dim, ImageBimodalize, ImageCroppingSimple, TopMask, ImageSignificantMask, ImageEqualize, enh_img_data, fg_mask_data);
+	if (seg_error != NULL) {
+		PyErr_SetString(PyExc_RuntimeError, seg_error);
+		return NULL;
+	}
 	
 	// Free memory, return values
 	Py_DECREF(array);
@@ -439,5 +273,6 @@ PyMODINIT_FUNC PyInit_cangafris(void)
 	import_array();
 	return obj;
 }
+
 
 } // extern "C"
