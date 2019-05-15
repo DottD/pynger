@@ -92,10 +92,13 @@ else:
 	ang_seg_args += ['-Wl,--whole-archive']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
+ext = '.so'
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
-	files = list(filter(lambda f: f.endswith('.a'), files))
+	files = list(filter(lambda f: f.endswith(ext), files))
+	print(dir, files)
 	if len(files) > 0:
-		cv_libs[dir] = [file[3:-2] for file in files]
+		cv_libs[dir] = [file[3:-len(ext)] for file in files]
+		print(cv_libs[dir])
 print("CV Libraries:", cv_libs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
@@ -111,6 +114,7 @@ ang_seg_ext = Extension(
 		'pynger/fingerprint/angafris_segmentation/Sources/ang_seg_wrapper.cpp',
 		'pynger/fingerprint/angafris_segmentation/ang_seg_module.cpp',
 		],
+	language='c++',
 	include_dirs=[
 		np.get_include(),
 		os.path.join(armadir, 'include'),
