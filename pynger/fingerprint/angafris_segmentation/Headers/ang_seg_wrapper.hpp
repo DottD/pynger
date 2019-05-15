@@ -1,18 +1,12 @@
-#ifdef __cplusplus
-    #include "myMathFunc.hpp"
-    #include "AdaptiveThreshold.hpp"
-    #include "ImageSignificantMask.hpp"
-    #include "ImageRescale.hpp"
-    #include "ImageNormalization.hpp"
-    #include "ImageMaskSimplify.hpp"
-    #include "ImageCropping.hpp"
+#include "myMathFunc.hpp"
+#include "AdaptiveThreshold.hpp"
+#include "ImageSignificantMask.hpp"
+#include "ImageRescale.hpp"
+#include "ImageNormalization.hpp"
+#include "ImageMaskSimplify.hpp"
+#include "ImageCropping.hpp"
 
-    #include <exception>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <exception>
 
 typedef struct {
 	double brightness;
@@ -85,7 +79,7 @@ typedef struct {
 	double maxcp2;
 } _ImageEqualize;
 
-char* segmentation(const unsigned char* data, const long* dim,
+char* segmentation(unsigned char* data, const long* dim,
 	const _ImageBimodalize ImageBimodalize,
 	const _ImageCroppingSimple ImageCroppingSimple,
 	const _TopMask TopMask,
@@ -93,6 +87,3 @@ char* segmentation(const unsigned char* data, const long* dim,
 	const _ImageEqualize ImageEqualize, 
     unsigned char* enh_img_data, unsigned char* fg_mask_data);
 	
-#ifdef __cplusplus
-}
-#endif

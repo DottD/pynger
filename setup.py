@@ -90,6 +90,11 @@ if sys.platform == 'darwin':
 	ang_seg_link_args += ['-dead_strip']
 else:
 	ang_seg_link_args += ['-Wl,--gc-sections']
+cv_libs = dict()
+for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
+	files = list(filter(lambda f: f.endswith('.a'), files))
+	if len(files) > 0:
+		cv_libs[dir] = [file[3:-2] for file in files]
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -109,13 +114,9 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	**find_libs(
-		lib_dir, {
-			os.path.join(cvdir, 'lib'): [f[3:-2] for _, _, files in os.walk(os.path.join(cvdir, 'lib')) for f in files if f.endswith('.a')],#['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
-		}
-	),
+	**find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
-	extra_link_args=ang_seg_link_args,
+	# extra_link_args=ang_seg_link_args,
 	)
 
 # Load README file

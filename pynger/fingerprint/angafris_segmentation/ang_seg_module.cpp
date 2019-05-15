@@ -1,15 +1,11 @@
-#include <stdlib.h>
 #include <Python.h>
-extern "C" {
 #include <patchlevel.h>
 #define PY_ARRAY_UNIQUE_SYMBOL NBIS_NUMPY_API
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-}
 
 #include "Headers/ang_seg_wrapper.hpp"
 
-extern "C" {
 PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 {
 	// Declarations
@@ -273,6 +269,3 @@ PyMODINIT_FUNC PyInit_cangafris(void)
 	import_array();
 	return obj;
 }
-
-
-} // extern "C"
