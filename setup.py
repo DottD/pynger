@@ -1,5 +1,6 @@
 import sys
 import re
+import itertools
 from setuptools import setup, find_packages
 from distutils.core import Extension
 import numpy as np
@@ -105,6 +106,8 @@ for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	if len(files) > 0:
 		cv_libs[dir] = (files, fmt)
 print("CV Libraries:", cv_libs)
+print('libraries=', itertools.chain(tuple(zip(*(cv_libs.values())))[0]))
+print('library_dirs=', list(cv_libs.keys()))
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -124,7 +127,7 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	libraries=list(map(lambda x: x[0], cv_libs.values())),
+	libraries=itertools.chain(tuple(zip(*(cv_libs.values())))[0]),
 	library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
