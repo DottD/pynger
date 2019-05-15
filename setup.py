@@ -92,14 +92,12 @@ else:
 	ang_seg_args += ['-Wl,--whole-archive']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
-ext = '.so'
-for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
+lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll).*')
+for dir, _, files in os.walk(os.path.join(cvdir, 'lib'), followlinks=True):
 	print(dir, files)
-	files = list(filter(lambda f: f.endswith(ext), files))
+	files = list(map(lambda x: x.group(1), filter(None, map(lib_patt.match, files))))
 	print(dir, files)
-	if len(files) > 0:
-		cv_libs[dir] = [file[3:-len(ext)] for file in files]
-		print(cv_libs[dir])
+	cv_libs[dir] = files
 print("CV Libraries:", cv_libs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
