@@ -39,17 +39,17 @@ def find_libs(root: str, libs: dict):
 		'libraries': [],
 		'library_dirs': [],
 		'extra_objects': []}
-	for d, l in libs.items():
+	for d, pair in libs.items():
+		static_libraries, formats = pair
 		if os.path.isabs(d):
 			static_lib_dir = d
 		else:
 			static_lib_dir = os.path.join(root, d)
-		static_libraries = l
 		if sys.platform == 'win32':
 			ret['libraries'].extend(static_libraries)
 			ret['library_dirs'].append(static_lib_dir)
 		else: # POSIX
-			ret['extra_objects'].extend([os.path.join(static_lib_dir, 'lib{}.a'.format(l)) for l in static_libraries])
+			ret['extra_objects'].extend([os.path.join(static_lib_dir, fmt.format(lib)) for lib, fmt in zip(static_libraries, formats)])
 	return ret
 		
 
@@ -92,12 +92,15 @@ else:
 	ang_seg_args += ['-Wl,--whole-archive']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
-lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll).*')
+lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll).*')
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib'), followlinks=True):
 	print(dir, files)
-	files = list(map(lambda x: x.group(1), filter(None, map(lib_patt.match, files))))
+	matches = filter(None, map(lib_patt.match, files))
+	files = list(map(lambda x: x.group(1), matches))
+	fmt = list(map(lambda x: x.group(2), matches))
 	print(dir, files)
-	cv_libs[dir] = files
+	if len(files) > 0:
+		cv_libs[dir] = (files, fmt)
 print("CV Libraries:", cv_libs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
