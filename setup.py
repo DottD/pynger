@@ -111,7 +111,7 @@ ang_seg_ext = Extension(
 		],
 	**find_libs(
 		lib_dir, {
-			os.path.join(cvdir, 'lib'): ['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
+			os.path.join(cvdir, 'lib'): [f[3:-2] for _, _, files in os.walk(os.path.join(cvdir, 'lib')) for f in files if f.endswith('.a')],#['opencv_core', 'opencv_features2d', 'opencv_imgcodecs', 'opencv_imgproc'],
 		}
 	),
 	extra_compile_args=ang_seg_args,
