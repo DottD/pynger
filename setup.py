@@ -98,8 +98,6 @@ cv_libs = dict()
 lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	print(files)
-	files = list(map(os.path.realpath, files))
-	print(files)
 	matches = list(filter(None, map(lib_patt.match, files)))
 	files = list(map(lambda x: x.group(1), matches))
 	fmt = list(map(lambda x: 'lib{}.'+x.group(2)+x.group(3), matches))
