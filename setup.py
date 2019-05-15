@@ -125,7 +125,7 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0])),
+	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
 	library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
