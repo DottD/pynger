@@ -119,13 +119,14 @@ ang_seg_ext = Extension(
 		'pynger/fingerprint/angafris_segmentation/Sources/ang_seg_wrapper.cpp',
 		'pynger/fingerprint/angafris_segmentation/ang_seg_module.cpp',
 		],
-	language='c++',
 	include_dirs=[
 		np.get_include(),
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	**find_libs( lib_dir, cv_libs ),
+	libraries=list(map(lambda x: x[0], cv_libs.values())),
+	library_dirs=list(cv_libs.keys()),
+	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
 	# extra_link_args=ang_seg_link_args,
 	)
