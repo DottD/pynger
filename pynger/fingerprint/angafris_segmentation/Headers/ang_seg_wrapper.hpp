@@ -1,3 +1,6 @@
+#ifndef ANG_SEG_WRAPPER
+#define ANG_SEG_WRAPPER
+
 #include "myMathFunc.hpp"
 #include "AdaptiveThreshold.hpp"
 #include "ImageSignificantMask.hpp"
@@ -87,3 +90,4 @@ char* segmentation(unsigned char* data, const long* dim,
 	const _ImageEqualize ImageEqualize, 
     unsigned char* enh_img_data, unsigned char* fg_mask_data);
 	
+#endif /* ANG_SEG_WRAPPER */

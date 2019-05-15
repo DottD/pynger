@@ -89,7 +89,7 @@ ang_seg_link_args = []
 if sys.platform == 'darwin':
 	ang_seg_link_args += ['-dead_strip']
 else:
-	ang_seg_args += ['-lstdc++']
+	ang_seg_args += ['-lc', '-lstdc++']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
