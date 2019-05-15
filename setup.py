@@ -94,6 +94,7 @@ else:
 cv_libs = dict()
 ext = '.so'
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
+	print(dir, files)
 	files = list(filter(lambda f: f.endswith(ext), files))
 	print(dir, files)
 	if len(files) > 0:
