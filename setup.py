@@ -83,14 +83,13 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14',
-	'-fdata-sections', '-ffunction-sections']
+ang_seg_args = ['-std=gnu++14']#,
+	# '-fdata-sections', '-ffunction-sections']
 ang_seg_link_args = []
-if sys.platform == 'darwin':
-	ang_seg_link_args += ['-dead_strip']
-else:
-	ang_seg_args += ['-lc', '-lstdc++']
-	ang_seg_link_args += ['-Wl,--gc-sections']
+# if sys.platform == 'darwin':
+# 	ang_seg_link_args += ['-dead_strip']
+# else:
+# 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	files = list(filter(lambda f: f.endswith('.a'), files))
