@@ -95,6 +95,7 @@ for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	files = list(filter(lambda f: f.endswith('.a'), files))
 	if len(files) > 0:
 		cv_libs[dir] = [file[3:-2] for file in files]
+print("CV Libraries:", cv_libs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
