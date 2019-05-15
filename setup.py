@@ -95,7 +95,7 @@ else:
 	ang_seg_args += ['-Wl,--whole-archive']
 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
-lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*?)')
+lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	print(files)
 	files = list(map(os.path.realpath, files))
