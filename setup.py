@@ -67,11 +67,14 @@ nbis_ext = Extension(
 		os.path.join(nbisdir, 'include'),
 		np.get_include()],
 	**find_libs(nbisdir, {
-		'lib': [
-			'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', # sgmnt
-			'fft', # enhnc
-			'an2k', 'mindtct', # mindtct
-			],
+		'lib': (
+				[
+				'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', # sgmnt
+				'fft', # enhnc
+				'an2k', 'mindtct', # mindtct
+				],
+				['lib{}.a' for _ in range(9)]
+			)
 		})
 	)
 	
