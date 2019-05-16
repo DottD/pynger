@@ -111,7 +111,7 @@ cv_runtime_library_dirs = cv_library_dirs
 ang_seg_link_args += list(itertools.chain(
 	map(lambda x: '-l'+x, cv_libraries),
 	map(lambda x: '-L'+x, cv_library_dirs),
-	map(lambda x: '-R'+x, cv_runtime_library_dirs)))
+	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
 print('ang_seg_link_args:', ang_seg_link_args)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
