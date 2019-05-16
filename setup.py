@@ -87,14 +87,14 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14',
-	'-fdata-sections', '-ffunction-sections']
+ang_seg_args = ['-std=gnu++14']#,
+	# '-fdata-sections', '-ffunction-sections']
 ang_seg_link_args = []
-if sys.platform == 'darwin':
-	ang_seg_link_args += ['-dead_strip']
-else:
-	ang_seg_args += ['-Wl,--whole-archive']
-	ang_seg_link_args += ['-Wl,--gc-sections']
+# if sys.platform == 'darwin':
+# 	ang_seg_link_args += ['-dead_strip']
+# else:
+# 	ang_seg_args += ['-Wl,--whole-archive']
+# 	ang_seg_link_args += ['-Wl,--gc-sections']
 cv_libs = dict()
 lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
@@ -104,8 +104,6 @@ for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	if len(files) > 0:
 		cv_libs[dir] = (files, fmt)
 print("CV Libraries:", cv_libs)
-print('libraries=', list(itertools.chain(tuple(zip(*(cv_libs.values())))[0])))
-print('library_dirs=', list(cv_libs.keys()))
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -127,6 +125,7 @@ ang_seg_ext = Extension(
 		],
 	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
 	library_dirs=list(cv_libs.keys()),
+	runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
 	# extra_link_args=ang_seg_link_args,
