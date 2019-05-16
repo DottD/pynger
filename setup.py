@@ -108,9 +108,10 @@ print("CV Libraries:", cv_libs)
 cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
 cv_library_dirs = list(cv_libs.keys())
 cv_runtime_library_dirs = cv_library_dirs
-ang_seg_link_args += [list(map(lambda x: '-l'+x, cv_libraries)), 
-	list(map(lambda x: '-L'+x, cv_library_dirs)),
-	list(map(lambda x: '-R'+x, cv_runtime_library_dirs))]
+ang_seg_link_args += list(chain(
+	map(lambda x: '-l'+x, cv_libraries),
+	map(lambda x: '-L'+x, cv_library_dirs),
+	map(lambda x: '-R'+x, cv_runtime_library_dirs)))
 print('ang_seg_link_args:', ang_seg_link_args)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
