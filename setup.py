@@ -95,6 +95,7 @@ ang_seg_link_args = []
 # else:
 # 	ang_seg_args += ['-Wl,--whole-archive']
 # 	ang_seg_link_args += ['-Wl,--gc-sections']
+
 cv_libs = dict()
 lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
 for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
@@ -104,6 +105,13 @@ for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 	if len(files) > 0:
 		cv_libs[dir] = (files, fmt)
 print("CV Libraries:", cv_libs)
+cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
+cv_library_dirs = list(cv_libs.keys())
+cv_runtime_library_dirs = cv_library_dirs
+ang_seg_link_args += [list(map(lambda x: '-l'+x, cv_libraries)), 
+	list(map(lambda x: '-L'+x, cv_library_dirs)),
+	list(map(lambda x: '-R'+x, cv_runtime_library_dirs))]
+print('ang_seg_link_args:', ang_seg_link_args)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -123,12 +131,12 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
-	library_dirs=list(cv_libs.keys()),
-	runtime_library_dirs=list(cv_libs.keys()),
+	# libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
+	# library_dirs=list(cv_libs.keys()),
+	# runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
-	# extra_link_args=ang_seg_link_args,
+	extra_link_args=ang_seg_link_args,
 	)
 
 # Load README file
