@@ -162,8 +162,8 @@ ang_seg_ext = Extension(
 	# library_dirs=cv_library_dirs,
 	# runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
-	# extra_compile_args=ang_seg_args,
-	# extra_link_args=ang_seg_link_args,
+	extra_compile_args=ang_seg_args,
+	extra_link_args=ang_seg_link_args,
 	extra_objects=extra_objects,
 	)
 
