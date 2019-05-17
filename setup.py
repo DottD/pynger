@@ -52,6 +52,18 @@ def find_libs(root: str, libs: dict):
 		else: # POSIX
 			ret['extra_objects'].extend([os.path.join(static_lib_dir, fmt.format(lib)) for lib, fmt in zip(static_libraries, formats)])
 	return ret
+
+def find_all_libs(root: str):
+	def get_all_static_libs_in_path(path):
+		lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
+		for dir, _, files in os.walk(path):
+			matches = filter(None, map(lib_patt.match, files))
+			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
+			if len(files) > 0:
+				yield list(map(lambda x: os.path.join(dir, x), files))
+	extra_objects = get_all_static_libs_in_path(root)
+	extra_objects = list(itertools.chain(*extra_objects))
+	return extra_objects
 		
 
 # Set up the extensions
@@ -67,16 +79,17 @@ nbis_ext = Extension(
 	include_dirs=[
 		os.path.join(nbisdir, 'include'),
 		np.get_include()],
-	**find_libs(nbisdir, {
-		'lib': (
-				[
-				'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', 'z', # sgmnt
-				'fft', # enhnc
-				'an2k', 'mindtct', # mindtct
-				],
-				['lib{}.a' for _ in range(9)]
-			)
-		})
+	extra_objects=find_all_libs(os.path.join(nbisdir, 'lib'))
+	# **find_libs(nbisdir, {
+	# 	'lib': (
+	# 			[
+	# 			'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', 'z', # sgmnt
+	# 			'fft', # enhnc
+	# 			'an2k', 'mindtct', # mindtct
+	# 			],
+	# 			['lib{}.a' for _ in range(9)]
+	# 		)
+	# 	})
 	)
 	
 pani_ext = Extension(
@@ -118,15 +131,7 @@ ang_seg_link_args = ['-fPIC', '-Wl,--verbose']
 # cv_libraries = list(itertools.chain(*cv_libraries))
 # cv_library_dirs = list(cv_library_dirs)
 
-def get_all_static_libs_in_path(path):
-	lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
-	for dir, _, files in os.walk(path):
-		matches = filter(None, map(lib_patt.match, files))
-		files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
-		if len(files) > 0:
-			yield list(map(lambda x: os.path.join(dir, x), files))
-extra_objects = get_all_static_libs_in_path(os.path.join(cvdir, 'lib'))
-extra_objects = list(itertools.chain(*extra_objects))
+extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 # As the linking order matters, put the corelib at the end and the adelib right before
 cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
 cv_adelib = [lib for lib in extra_objects if 'libade' in lib][0]
