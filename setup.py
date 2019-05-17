@@ -70,7 +70,7 @@ nbis_ext = Extension(
 	**find_libs(nbisdir, {
 		'lib': (
 				[
-				'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', # sgmnt
+				'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', 'z', # sgmnt
 				'fft', # enhnc
 				'an2k', 'mindtct', # mindtct
 				],
