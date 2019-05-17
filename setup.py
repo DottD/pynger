@@ -67,6 +67,7 @@ def find_all_libs(root: str):
 
 # NBIS Extension
 extra_objects = find_all_libs(os.path.join(nbisdir, 'lib'))
+extra_objects = ['--start-group'] + extra_objects + ['--end-group']
 print('NBIS extra_objects:', extra_objects)
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
@@ -113,6 +114,7 @@ cv_adelib_idx = extra_objects.index(cv_adelib)
 indices = [cv_adelib_idx, cv_corelib_idx]
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
+extra_objects = ['--start-group'] + extra_objects + ['--end-group']
 print('OpenCV extra_compile_args:', ang_seg_args)
 print('OpenCV extra_link_args:', ang_seg_link_args)
 print('OpenCV extra_objects:', extra_objects)
