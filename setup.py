@@ -58,9 +58,12 @@ def find_all_libs(root: str):
 		lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
 		for dir, _, files in os.walk(path):
 			matches = filter(None, map(lib_patt.match, files))
-			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
+			files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
 			if len(files) > 0:
-				yield list(map(lambda x: os.path.join(dir, x), files))
+
+			# files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
+			# if len(files) > 0:
+			# 	yield list(map(lambda x: os.path.join(dir, x), files))
 	extra_objects = get_all_static_libs_in_path(root)
 	extra_objects = list(itertools.chain(*extra_objects))
 	return extra_objects
@@ -109,9 +112,11 @@ extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 # As the linking order matters, put the corelib at the end and the adelib right before
 cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
 cv_adelib = [lib for lib in extra_objects if 'libade' in lib][0]
+cv_zlib = [lib for lib in extra_objects if 'libz' in lib][0]
 cv_corelib_idx = extra_objects.index(cv_corelib)
 cv_adelib_idx = extra_objects.index(cv_adelib)
-indices = [cv_adelib_idx, cv_corelib_idx]
+cv_zlib_idx = extra_objects.index(cv_zlib)
+indices = [cv_adelib_idx, cv_corelib_idx, cv_zlib_idx]
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
 extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
