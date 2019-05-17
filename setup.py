@@ -115,7 +115,7 @@ def get_all_libs_in_path(path):
 		if len(files) > 0:
 			yield dir, files
 cv_library_dirs, cv_libraries  = zip(*get_all_libs_in_path(os.path.join(cvdir, 'lib')))
-cv_libraries = list(itertools.chain(cv_libraries))
+cv_libraries = list(itertools.chain(*cv_libraries))
 cv_library_dirs = list(cv_library_dirs)
 # cv_runtime_library_dirs = cv_library_dirs
 # ang_seg_link_args += list(itertools.chain(
