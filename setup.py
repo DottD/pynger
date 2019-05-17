@@ -87,26 +87,36 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14', '-Wextra']#,
+ang_seg_args = ['-std=gnu++14', '-Wextra', '-v']
 	# '-fdata-sections', '-ffunction-sections']
-ang_seg_link_args = ['-fPIC']
+ang_seg_link_args = ['-fPIC', '-v']
 # if sys.platform == 'darwin':
 # 	ang_seg_link_args += ['-dead_strip']
 # else:
 # 	ang_seg_args += ['-Wl,--whole-archive']
 # 	ang_seg_link_args += ['-Wl,--gc-sections']
 
-cv_libs = dict()
-lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
-for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
-	matches = list(filter(None, map(lib_patt.match, files)))
-	files = list(map(lambda x: x.group(1), matches))
-	fmt = list(map(lambda x: 'lib{}.'+x.group(2)+x.group(3), matches))
-	if len(files) > 0:
-		cv_libs[dir] = (files, fmt)
-print("CV Libraries:", cv_libs)
-cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
-cv_library_dirs = list(cv_libs.keys())
+# cv_libs = dict()
+# lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
+# for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
+# 	matches = list(filter(None, map(lib_patt.match, files)))
+# 	files = list(map(lambda x: x.group(1), matches))
+# 	fmt = list(map(lambda x: 'lib{}.'+x.group(2)+x.group(3), matches))
+# 	if len(files) > 0:
+# 		cv_libs[dir] = (files, fmt)
+# print("CV Libraries:", cv_libs)
+# cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
+# cv_library_dirs = list(cv_libs.keys())
+def get_all_libs_in_path(path):
+	lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll)')
+	for dir, _, files in os.walk(path):
+		matches = filter(None, map(lib_patt.match, files))
+		files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
+		if len(files) > 0:
+			yield dir, files
+cv_library_dirs, cv_libraries  = zip(*get_all_libs_in_path(os.path.join(cvdir, 'lib')))
+cv_libraries = list(itertools.chain(cv_libraries))
+cv_library_dirs = list(cv_library_dirs)
 # cv_runtime_library_dirs = cv_library_dirs
 # ang_seg_link_args += list(itertools.chain(
 # 	map(lambda x: '-l'+x, cv_libraries),
