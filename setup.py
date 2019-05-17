@@ -107,16 +107,28 @@ ang_seg_link_args = ['-fPIC', '-v']
 # print("CV Libraries:", cv_libs)
 # cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
 # cv_library_dirs = list(cv_libs.keys())
-def get_all_libs_in_path(path):
-	lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll)')
+
+# def get_all_libs_in_path(path):
+# 	lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll)')
+# 	for dir, _, files in os.walk(path):
+# 		matches = filter(None, map(lib_patt.match, files))
+# 		files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
+# 		if len(files) > 0:
+# 			yield dir, files
+# cv_library_dirs, cv_libraries  = zip(*get_all_libs_in_path(os.path.join(cvdir, 'lib')))
+# cv_libraries = list(itertools.chain(*cv_libraries))
+# cv_library_dirs = list(cv_library_dirs)
+
+def get_all_static_libs_in_path(path):
+	lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
 	for dir, _, files in os.walk(path):
 		matches = filter(None, map(lib_patt.match, files))
-		files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
+		files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
 		if len(files) > 0:
-			yield dir, files
-cv_library_dirs, cv_libraries  = zip(*get_all_libs_in_path(os.path.join(cvdir, 'lib')))
-cv_libraries = list(itertools.chain(*cv_libraries))
-cv_library_dirs = list(cv_library_dirs)
+			yield list(map(lambda x: os.path.join(dir, x), files))
+extra_objects = get_all_static_libs_in_path(os.path.join(cvdir, 'lib'))
+extra_objects = list(itertools.chain(*extra_objects))
+
 # cv_runtime_library_dirs = cv_library_dirs
 # ang_seg_link_args += list(itertools.chain(
 # 	map(lambda x: '-l'+x, cv_libraries),
@@ -124,8 +136,9 @@ cv_library_dirs = list(cv_library_dirs)
 # 	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
 print('extra_compile_args:', ang_seg_args)
 print('extra_link_args:', ang_seg_link_args)
-print('libraries:', cv_libraries)
-print('library_dirs:', cv_library_dirs)
+print('extra_objects:', extra_objects)
+# print('libraries:', cv_libraries)
+# print('library_dirs:', cv_library_dirs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -145,12 +158,13 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	libraries=cv_libraries,
-	library_dirs=cv_library_dirs,
+	# libraries=cv_libraries,
+	# library_dirs=cv_library_dirs,
 	# runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
-	extra_compile_args=ang_seg_args,
-	extra_link_args=ang_seg_link_args,
+	# extra_compile_args=ang_seg_args,
+	# extra_link_args=ang_seg_link_args,
+	extra_objects=extra_objects,
 	)
 
 # Load README file
