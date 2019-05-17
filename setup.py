@@ -58,12 +58,9 @@ def find_all_libs(root: str):
 		lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
 		for dir, _, files in os.walk(path):
 			matches = filter(None, map(lib_patt.match, files))
-			files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
+			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
 			if len(files) > 0:
-
-			# files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
-			# if len(files) > 0:
-			# 	yield list(map(lambda x: os.path.join(dir, x), files))
+				yield list(map(lambda x: os.path.join(dir, x), files))
 	extra_objects = get_all_static_libs_in_path(root)
 	extra_objects = list(itertools.chain(*extra_objects))
 	return extra_objects
