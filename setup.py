@@ -64,9 +64,10 @@ def find_all_libs(root: str):
 	extra_objects = get_all_static_libs_in_path(root)
 	extra_objects = list(itertools.chain(*extra_objects))
 	return extra_objects
-		
 
-# Set up the extensions
+# NBIS Extension
+extra_objects = find_all_libs(os.path.join(nbisdir, 'lib'))
+print('NBIS extra_objects:', extra_objects)
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
 	sources=[
@@ -79,7 +80,7 @@ nbis_ext = Extension(
 	include_dirs=[
 		os.path.join(nbisdir, 'include'),
 		np.get_include()],
-	extra_objects=find_all_libs(os.path.join(nbisdir, 'lib'))
+	extra_objects=extra_objects
 	# **find_libs(nbisdir, {
 	# 	'lib': (
 	# 			[
@@ -100,37 +101,9 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
+# OpenCV 
 ang_seg_args = ['-std=gnu++14', '-Wextra']
 ang_seg_link_args = ['-fPIC', '-Wl,--verbose']
-# if sys.platform == 'darwin':
-# 	ang_seg_link_args += ['-dead_strip']
-# else:
-# 	ang_seg_args += ['-Wl,--whole-archive']
-# 	ang_seg_link_args += ['-Wl,--gc-sections']
-
-# cv_libs = dict()
-# lib_patt = re.compile('lib(\\w+)\\.(so|a|dylib|dll)(.*)')
-# for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
-# 	matches = list(filter(None, map(lib_patt.match, files)))
-# 	files = list(map(lambda x: x.group(1), matches))
-# 	fmt = list(map(lambda x: 'lib{}.'+x.group(2)+x.group(3), matches))
-# 	if len(files) > 0:
-# 		cv_libs[dir] = (files, fmt)
-# print("CV Libraries:", cv_libs)
-# cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
-# cv_library_dirs = list(cv_libs.keys())
-
-# def get_all_libs_in_path(path):
-# 	lib_patt = re.compile('lib(\\w+)\\.(?:so|a|dylib|dll)')
-# 	for dir, _, files in os.walk(path):
-# 		matches = filter(None, map(lib_patt.match, files))
-# 		files = list(set(map(lambda x: x[1], matches))) # use set to produce unique strings
-# 		if len(files) > 0:
-# 			yield dir, files
-# cv_library_dirs, cv_libraries  = zip(*get_all_libs_in_path(os.path.join(cvdir, 'lib')))
-# cv_libraries = list(itertools.chain(*cv_libraries))
-# cv_library_dirs = list(cv_library_dirs)
-
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 # As the linking order matters, put the corelib at the end and the adelib right before
 cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
@@ -140,16 +113,9 @@ cv_adelib_idx = extra_objects.index(cv_adelib)
 indices = [cv_adelib_idx, cv_corelib_idx]
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
-# cv_runtime_library_dirs = cv_library_dirs
-# ang_seg_link_args += list(itertools.chain(
-# 	map(lambda x: '-l'+x, cv_libraries),
-# 	map(lambda x: '-L'+x, cv_library_dirs),
-# 	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
-print('extra_compile_args:', ang_seg_args)
-print('extra_link_args:', ang_seg_link_args)
-print('extra_objects:', extra_objects)
-# print('libraries:', cv_libraries)
-# print('library_dirs:', cv_library_dirs)
+print('OpenCV extra_compile_args:', ang_seg_args)
+print('OpenCV extra_link_args:', ang_seg_link_args)
+print('OpenCV extra_objects:', extra_objects)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -169,10 +135,6 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	# libraries=cv_libraries,
-	# library_dirs=cv_library_dirs,
-	# runtime_library_dirs=list(cv_libs.keys()),
-	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
 	extra_link_args=ang_seg_link_args,
 	extra_objects=extra_objects,
