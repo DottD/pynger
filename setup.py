@@ -112,7 +112,10 @@ cv_library_dirs = list(cv_libs.keys())
 # 	map(lambda x: '-l'+x, cv_libraries),
 # 	map(lambda x: '-L'+x, cv_library_dirs),
 # 	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
-print('ang_seg_link_args:', ang_seg_link_args)
+print('extra_compile_args:', ang_seg_args)
+print('extra_link_args:', ang_seg_link_args)
+print('libraries:', cv_libraries)
+print('library_dirs:', cv_library_dirs)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
 	sources=[
@@ -132,12 +135,12 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
-	library_dirs=list(cv_libs.keys()),
+	libraries=cv_libraries,
+	library_dirs=cv_library_dirs,
 	# runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
-	# extra_link_args=ang_seg_link_args,
+	extra_link_args=ang_seg_link_args,
 	)
 
 # Load README file
