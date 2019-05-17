@@ -151,7 +151,7 @@ class FieldProxy(Proxy):
                 put_uint8(a)
                 put_uint8(m)
 
-def loadDataset(path: str,):
+def loadDataset(path: str):
     """ Loads the FVC-TEST dataset.
 
     Args:
@@ -201,25 +201,18 @@ def loadSegmentationDataset(sdir: str, odir: str):
     Return:
         A generator of pairs (X, y) where X is the original image, and y the corresponding ground truth segmentation image.
     """
-    sfiles = recursively_scan_dir_gen(sdir, '.png')
-    basenames = map(os.path.basename, sfiles)
     pattern = re.compile('(FVC\\d+)_(\\w+)_\\w+_(\\d+)_(\\d+)')
-    sfiles, matches = zip(*filter( # keep only the files that matches the pattern
-        lambda pair: pair[1] is not None, 
-        zip(sfiles, map(pattern.match, basenames)) ))
-    for sfile, specs in zip(sfiles, matches):
-        ofile = os.path.join(
+    sfiles = recursively_scan_dir_gen(sdir, '.png')
+    for sfile in sfiles:
+        basename = os.path.basename(sfile)
+        match = pattern.match(basename)
+        if match:
+            ofile = os.path.join(
                 odir,
-                specs[1], # FVCxxxx
+                match[1], # FVCxxxx
                 'Dbs',
                 # converts DB1 to Db1, them appends an 'a' for the first 100 images, and a 'b' otherwise
-                specs[2].title() + '_' + ('a' if int(specs[3])<=100 else 'b'),
-                '{}_{}.tif'.format(specs[3], specs[4]) # append the filename
+                match[2].title() + '_' + ('a' if int(match[3])<=100 else 'b'),
+                '{}_{}.tif'.format(match[3], match[4]) # append the filename
                 )
-        try:
-            y = np.array(PIL.Image.open(sfile).convert('L'))
-            X = np.array(PIL.Image.open(ofile).convert('L'))
-        except Exception as err:
-            print('Warning:', err)
-            continue
-        yield (X, y)
+            yield (ofile, sfile)

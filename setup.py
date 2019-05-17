@@ -87,9 +87,9 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14']#,
+ang_seg_args = ['-std=gnu++14', '-Wextra']#,
 	# '-fdata-sections', '-ffunction-sections']
-ang_seg_link_args = []
+ang_seg_link_args = ['-fPIC']
 # if sys.platform == 'darwin':
 # 	ang_seg_link_args += ['-dead_strip']
 # else:
@@ -107,11 +107,11 @@ for dir, _, files in os.walk(os.path.join(cvdir, 'lib')):
 print("CV Libraries:", cv_libs)
 cv_libraries = list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0]
 cv_library_dirs = list(cv_libs.keys())
-cv_runtime_library_dirs = cv_library_dirs
-ang_seg_link_args += list(itertools.chain(
-	map(lambda x: '-l'+x, cv_libraries),
-	map(lambda x: '-L'+x, cv_library_dirs),
-	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
+# cv_runtime_library_dirs = cv_library_dirs
+# ang_seg_link_args += list(itertools.chain(
+# 	map(lambda x: '-l'+x, cv_libraries),
+# 	map(lambda x: '-L'+x, cv_library_dirs),
+# 	map(lambda x: '-Wl,--enable-new-dtags,-R'+x, cv_runtime_library_dirs)))
 print('ang_seg_link_args:', ang_seg_link_args)
 ang_seg_ext = Extension(
 	'pynger.fingerprint.cangafris',
@@ -132,12 +132,12 @@ ang_seg_ext = Extension(
 		os.path.join(armadir, 'include'),
 		os.path.join(cvdir, 'include/opencv4'),
 		],
-	# libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
-	# library_dirs=list(cv_libs.keys()),
+	libraries=list(itertools.chain(tuple(zip(*(cv_libs.values())))[0]))[0],
+	library_dirs=list(cv_libs.keys()),
 	# runtime_library_dirs=list(cv_libs.keys()),
 	# **find_libs( lib_dir, cv_libs ),
 	extra_compile_args=ang_seg_args,
-	extra_link_args=ang_seg_link_args,
+	# extra_link_args=ang_seg_link_args,
 	)
 
 # Load README file

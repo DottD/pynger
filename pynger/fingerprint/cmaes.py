@@ -4,6 +4,7 @@ import os
 import pickle
 import time
 import copy
+import PIL
 from random import sample as random_sample
 
 import cma
@@ -27,7 +28,7 @@ def static_var(varname, value):
         return func
     return decorate
 
-def cmaes_optimize(estimator_cls, reloadDS,
+def cmaes_optimize(estimator_cls, X, y, load_imgs,
     param_space, fixed_variables, initial_params,
     **kwargs):
     """ Optimizes the parameters of estimator using the CMA-ES algorithm.
@@ -118,10 +119,11 @@ def cmaes_optimize(estimator_cls, reloadDS,
 
     # Define the logic for the creation of the sub-datasets
     if sample_size < 0:
-        getXy = reloadDS
+        XX, yy = zip(*load_imgs(X, y))
+        XX = list(XX)
+        yy = list(yy)
     else:
-        Xy = random_combination( reloadDS(), sample_size ) # no replacement
-        getXy = lambda: next(Xy)
+        Xy = random_combination( zip(X, y), sample_size ) # no replacement
 
     def fit_fun(x):
         """ Evaluates the set of parameters x.
@@ -135,7 +137,7 @@ def cmaes_optimize(estimator_cls, reloadDS,
         kwa = type_fixing(kwa)
         # Add the fixed variables before the computation
         kwa.update(fixed_variables)
-        return - estimator_cls(**kwa).score( *zip(*getXy()) )
+        return - estimator_cls(**kwa).score( XX, yy )
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables
@@ -148,8 +150,8 @@ def cmaes_optimize(estimator_cls, reloadDS,
         options = {
             'bounds': [0, 1],
             'BoundaryHandler': cma.BoundTransform,
-            'tolfun': 1e-1,
-            'tolx': 1e-3,
+            'tolfun': 1e-4,
+            'tolx': 1e-5,
             'verb_log': -1,
             'maxiter': n_iter,
         }
@@ -184,6 +186,15 @@ def cmaes_optimize(estimator_cls, reloadDS,
     try:
         with Parallel(n_processes) as parallel:
             while not search_results.stop():
+                # Load batch
+                if sample_size > 0:
+                    try:
+                        X, y = zip(*next(Xy))
+                    except IndexError:
+                        break
+                    XX, yy = zip(*load_imgs(X, y))
+                    XX = list(XX)
+                    yy = list(yy)
                 # Sample some solutions
                 solutions = search_results.ask()
                 # --- verbose ---
@@ -209,7 +220,7 @@ def cmaes_optimize(estimator_cls, reloadDS,
                     yaml.dump(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist()))), f, Dumper=yaml.Dumper)
                 # --- verbose ---
                 if verbose:
-                    print('{"metric": "Best Score", "value": {}}'.format(search_results.best.f))
+                    print({"metric": "Best Score", "value": search_results.best.f})
                     log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                     print(log)
                     try:
