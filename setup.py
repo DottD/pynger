@@ -87,11 +87,8 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14', '-Wextra']#, '-v']#, '-Wl,--verbose']
-	# '-fdata-sections', '-ffunction-sections']
-ang_seg_link_args = ['-fPIC', #'-v', '-Wl,--verbose', 
-	'-M',
-	'-t']
+ang_seg_args = ['-std=gnu++14', '-Wextra']
+ang_seg_link_args = ['-fPIC', '-M', '-t']
 # if sys.platform == 'darwin':
 # 	ang_seg_link_args += ['-dead_strip']
 # else:
@@ -131,6 +128,13 @@ def get_all_static_libs_in_path(path):
 extra_objects = get_all_static_libs_in_path(os.path.join(cvdir, 'lib'))
 extra_objects = list(itertools.chain(*extra_objects))
 
+cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
+cv_adelib = [lib for lib in extra_objects if 'libade' in lib][0]
+cv_corelib_idx = extra_objects.index(cv_corelib)
+cv_adelib_idx = extra_objects.index(cv_adelib)
+indices = [cv_adelib_idx, cv_corelib_idx]
+indices += [k for k in range(len(extra_objects)) if k not in indices]
+extra_objects = [extra_objects[k] for k in indices]
 # cv_runtime_library_dirs = cv_library_dirs
 # ang_seg_link_args += list(itertools.chain(
 # 	map(lambda x: '-l'+x, cv_libraries),
