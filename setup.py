@@ -87,9 +87,9 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-ang_seg_args = ['-std=gnu++14', '-Wextra']
+ang_seg_args = ['-std=gnu++14', '-Wextra', '-v']
 	# '-fdata-sections', '-ffunction-sections']
-ang_seg_link_args = ['-fPIC']
+ang_seg_link_args = ['-fPIC', '-v']
 # if sys.platform == 'darwin':
 # 	ang_seg_link_args += ['-dead_strip']
 # else:
