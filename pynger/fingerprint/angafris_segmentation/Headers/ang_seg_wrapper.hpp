@@ -88,6 +88,7 @@ char* segmentation(unsigned char* data, const long* dim,
 	const _TopMask TopMask,
 	const _ImageSignificantMask ImageSignificantMask,
 	const _ImageEqualize ImageEqualize, 
-    unsigned char* enh_img_data, unsigned char* fg_mask_data);
+    unsigned char* enh_img_data, unsigned char* fg_mask_data,
+	const int enhance_only);
 	
 #endif /* ANG_SEG_WRAPPER */

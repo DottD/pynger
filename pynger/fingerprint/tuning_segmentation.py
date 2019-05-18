@@ -138,6 +138,7 @@ class AnGaFIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
         mincp2: float = 2,
         maxcp1: float = 1,
         maxcp2: float = 2,
+        enhanceOnly: bool = False,
     ):
         """ Initializes and stores all the algorithm's parameters """
         pars = inspect.signature(AnGaFIS_Seg_Estimator.__init__)

@@ -13,6 +13,7 @@ from pynger.fingerprint.refinement import reliable_iterative_smoothing
 from pynger.types import Field, Image, List, Mask, Union
 from pynger.fingerprint.nbis import compute_lro as nbis_lro
 from pynger.fingerprint.nbis_wrapper import nbis_angle2idx, nbis_idx2angle, nbis_bozorth3
+from pynger.fingerprint.tuning_segmentation import AnGaFIS_Seg_Estimator
 
 from joblib import Parallel, delayed
 
@@ -179,6 +180,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         self.number_angles = number_angles
         self.along_sigma_ratio = along_sigma_ratio
         self.ortho_sigma = ortho_sigma
+        self.segmentor = AnGaFIS_Seg_Estimator(enhanceOnly=True)
 
     def train_on_data(self, X, y):
         """ This algorithm does not need any fitting. """
@@ -199,6 +201,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             step_x: horizontal distance between sample points (in pixels)
             step_y: vertical distance between sample points (in pixels)
         """
+        image, _ = self.segmentor.segment(image)
         mask = convert_to_full(mask, **bd_specs)
         lro, rel = LRO(
             image, mask=mask, 

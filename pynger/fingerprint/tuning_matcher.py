@@ -13,6 +13,7 @@ from pynger.types import Field, Image, List, Mask, Union
 from pynger.fingerprint.nbis import mindtct
 from pynger.fingerprint.nbis import compute_lro as nbis_lro
 from pynger.fingerprint.nbis_wrapper import nbis_angle2idx, nbis_idx2angle, nbis_bozorth3
+from pynger.fingerprint.tuning_segmentation import AnGaFIS_Seg_Estimator
 
 from joblib import Parallel, delayed
 
@@ -64,16 +65,17 @@ class AnGaFISMatcher(FingerprintMatcher):
             'along_sigma_ratio': along_sigma_ratio,
             'ortho_sigma': ortho_sigma,
         }
+        self.segmentor = AnGaFIS_Seg_Estimator(enhanceOnly=False)
 
     def compute_lro(self, padded_img, blkoffs, num_dir, params):
         params.update({'number_angles': num_dir})
         preprocess = False
         # Eventually preprocess the image and get the foreground mask
         if preprocess:
-            enhanced = angafis_preprocessing(padded_img, verbose=False)
-            mask = enhanced > 0
-            mask = binary_closing(mask, structure=np.ones((4,4)), iterations=1)
-            lro, _ = LRO(enhanced, **params)
+            enhanced, mask = self.segmentor.segment(padded_img)
+            # mask = enhanced > 0
+            # mask = binary_closing(mask, structure=np.ones((4,4)), iterations=1)
+            lro, _ = LRO(enhanced, mask, **params)
         else:
             lro, _ = LRO(padded_img, **params)
         field = polar2cart(lro, 1, retField=True)

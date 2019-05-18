@@ -12,6 +12,7 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	unsigned char* data;
 	PyObject *enh_img, *fg_mask; // output
 	unsigned char *enh_img_data, *fg_mask_data;
+	int enhance_only = 0; // do everything by default
 
 	// Parameters declarations and defaults
 	_ImageBimodalize ImageBimodalize = {
@@ -149,11 +150,12 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 		(char*)"mincp2",
 		(char*)"maxcp1",
 		(char*)"maxcp2",
+		(char*)"enhanceOnly",
 		NULL
 	};
 		
 	if (!PyArg_ParseTupleAndKeywords(
-		args, kwargs, "O|$fffiififfiffffiiiifiiiiiiiiiifiiiiiiiiiiiiiiifiiiiiiiiiiffff", kwlist, // specifications
+		args, kwargs, "O|$fffiififfiffffiiiifiiiiiiiiiifiiiiiiiiiiiiiiifiiiiiiiiiiffffp", kwlist, // specifications
 		&input, // argument
 		&ImageBimodalize.brightness,
 		&ImageBimodalize.leftCut,
@@ -214,7 +216,8 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 		&ImageEqualize.mincp1,
 		&ImageEqualize.mincp2,
 		&ImageEqualize.maxcp1,
-		&ImageEqualize.maxcp2
+		&ImageEqualize.maxcp2,
+		&enhance_only
 		))
 		return NULL;
 			
@@ -237,7 +240,7 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	fg_mask_data = (unsigned char*)PyArray_DATA( (PyArrayObject*)fg_mask );
 	
 	// Segment the image
-	char* seg_error = segmentation(data, dim, ImageBimodalize, ImageCroppingSimple, TopMask, ImageSignificantMask, ImageEqualize, enh_img_data, fg_mask_data);
+	char* seg_error = segmentation(data, dim, ImageBimodalize, ImageCroppingSimple, TopMask, ImageSignificantMask, ImageEqualize, enh_img_data, fg_mask_data, enhance_only);
 	if (seg_error != NULL) {
 		PyErr_SetString(PyExc_RuntimeError, seg_error);
 		return NULL;
