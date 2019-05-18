@@ -217,7 +217,7 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
                     pickle.dump(search_results, f)
                 curpar = os.path.splitext(outDir)[0] + "_bestpar_{}.yml".format(curiter)
                 with open(curpar, 'w') as f:
-                    yaml.dump(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist()))), f, Dumper=yaml.Dumper)
+                    yaml.dump(type_fixing(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist())))), f, Dumper=yaml.Dumper)
                 # --- verbose ---
                 if verbose:
                     print({"metric": "Best Score", "value": search_results.best.f})
