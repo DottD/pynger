@@ -116,6 +116,9 @@ cv_zlib_idx = extra_objects.index(cv_zlib)
 indices = [cv_adelib_idx, cv_corelib_idx, cv_zlib_idx]
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
+# LAPACK
+extra_objects += find_all_libs(os.path.join(lapackdir, 'lib'))
+# Envelope with group construct
 extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
 print('OpenCV extra_compile_args:', ang_seg_args)
 print('OpenCV extra_link_args:', ang_seg_link_args)
