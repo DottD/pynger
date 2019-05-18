@@ -4,7 +4,7 @@
 
 #include "Headers/ang_seg_wrapper.hpp"
 
-PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
+static PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 {
 	// Declarations
 	PyObject *input, *array; // input
@@ -12,150 +12,148 @@ PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	unsigned char* data;
 	PyObject *enh_img, *fg_mask; // output
 	unsigned char *enh_img_data, *fg_mask_data;
+	
+	_ImageBimodalize ImageBimodalize;
+	_ImageCroppingSimple ImageCroppingSimple;
+	_TopMask TopMask;
+	_ImageSignificantMask ImageSignificantMask;
+	_ImageEqualize ImageEqualize;
 	int enhance_only = 0; // do everything by default
-
-	// Parameters declarations and defaults
-	_ImageBimodalize ImageBimodalize = {
-		.brightness = 0.35,
-		.leftCut = 0.25,
-		.rightCut = 0.5,
-		.histSmooth = 25,
-		.reparSmooth = 10
-	};
-	_ImageCroppingSimple ImageCroppingSimple = {
-		.minVariation = 0.01,
-		.marg = 5
-	};
-	_TopMask TopMask = {
-		.scanAreaAmount = 0.1,
-		.gradientFilterWidth = 0.25,
-		.gaussianFilterSide = 5,
-		.binarizationLevel = 0.2,
-		.f = 3.5,
-		.slopeAngle = 1.5,
-		.lev = 0.95,
-		.marg = 5
-	};
-	_ImageSignificantMask ImageSignificantMask = {
-		.medFilterSide = 2,
-		.gaussFilterSide = 3,
-		.minFilterSide = 5,
-		.binLevVarMask = 0.45,
-		.dilate1RadiusVarMask = 5,
-		.erodeRadiusVarMask = 35,
-		.dilate2RadiusVarMask = 20,
-		.maxCompNumVarMask = 2,
-		.minCompThickVarMask = 75,
-		.maxHolesNumVarMask = -1,
-		.minHolesThickVarMask = 18,
-		.histeresisThreshold1Gmask = 30,
-		.histeresisThreshold2Gmask = 70,
-		.radiusGaussFilterGmask = 10,
-		.minMeanIntensityGmask = 0.2,
-		.dilate1RadiusGmask = 10,
-		.erodeRadiusGmask = 25,
-		.dilate2RadiusGmask = 10,
-		.maxCompNumGmask = 2,
-		.minCompThickGmask = 75,
-		.maxHolesNumGmask = -1,
-		.minHolesThickGmask = 15,
-		.histeresisThreshold3Gmask = 25,
-		.histeresisThreshold4Gmask = 50,
-		.dilate3RadiusGmask = 10,
-		.erode2RadiusGmask = 5,
-		.histeresisThreshold5Gmask = 45,
-		.histeresisThreshold6Gmask = 90,
-		.dilate4RadiusGmask = 4,
-		.radiusGaussFilterComp = 30,
-		.meanIntensityCompThreshold = 0.6,
-		.dilateFinalRadius = 10,
-		.erodeFinalRadius = 20,
-		.smoothFinalRadius = 10,
-		.maxCompNumFinal = 2,
-		.minCompThickFinal = 75,
-		.maxHolesNumFinal = 4,
-		.minHolesThickFinal = 30,
-		.fixedFrameWidth = 20,
-		.smooth2FinalRadius = 20
-	};
-	_ImageEqualize ImageEqualize = {
-		.minMaxFilter = 5,
-		.mincp1 = 0.75,
-		.mincp2 = 0.9,
-		.maxcp1 = 0.0,
-		.maxcp2 = 0.25
-	};
 		
 	// Parse input arguments
-	static char *kwlist[] = 
+	static const char *kwlist[] = 
 	{
-		(char*)"image",
-		(char*)"brightness",
-		(char*)"leftCut",
-		(char*)"rightCut",
-		(char*)"histSmooth",
-		(char*)"reparSmooth",
-		(char*)"minVariation",
-		(char*)"cropSimpleMarg",
-		(char*)"scanAreaAmount",
-		(char*)"gradientFilterWidth",
-		(char*)"gaussianFilterSide",
-		(char*)"binarizationLevel",
-		(char*)"f",
-		(char*)"slopeAngle",
-		(char*)"lev",
-		(char*)"topMaskMarg",
-		(char*)"medFilterSide",
-		(char*)"gaussFilterSide",
-		(char*)"minFilterSide",
-		(char*)"binLevVarMask",
-		(char*)"dilate1RadiusVarMask",
-		(char*)"erodeRadiusVarMask",
-		(char*)"dilate2RadiusVarMask",
-		(char*)"maxCompNumVarMask",
-		(char*)"minCompThickVarMask",
-		(char*)"maxHolesNumVarMask",
-		(char*)"minHolesThickVarMask",
-		(char*)"histeresisThreshold1Gmask",
-		(char*)"histeresisThreshold2Gmask",
-		(char*)"radiusGaussFilterGmask",
-		(char*)"minMeanIntensityGmask",
-		(char*)"dilate1RadiusGmask",
-		(char*)"erodeRadiusGmask",
-		(char*)"dilate2RadiusGmask",
-		(char*)"maxCompNumGmask",
-		(char*)"minCompThickGmask",
-		(char*)"maxHolesNumGmask",
-		(char*)"minHolesThickGmask",
-		(char*)"histeresisThreshold3Gmask",
-		(char*)"histeresisThreshold4Gmask",
-		(char*)"dilate3RadiusGmask",
-		(char*)"erode2RadiusGmask",
-		(char*)"histeresisThreshold5Gmask",
-		(char*)"histeresisThreshold6Gmask",
-		(char*)"dilate4RadiusGmask",
-		(char*)"radiusGaussFilterComp",
-		(char*)"meanIntensityCompThreshold",
-		(char*)"dilateFinalRadius",
-		(char*)"erodeFinalRadius",
-		(char*)"smoothFinalRadius",
-		(char*)"maxCompNumFinal",
-		(char*)"minCompThickFinal",
-		(char*)"maxHolesNumFinal",
-		(char*)"minHolesThickFinal",
-		(char*)"fixedFrameWidth",
-		(char*)"smooth2FinalRadius",
-		(char*)"minMaxFilter",
-		(char*)"mincp1",
-		(char*)"mincp2",
-		(char*)"maxcp1",
-		(char*)"maxcp2",
-		(char*)"enhanceOnly",
+		"image",
+		"brightness",
+		"leftCut",
+		"rightCut",
+		"histSmooth",
+		"reparSmooth",
+		"minVariation",
+		"cropSimpleMarg",
+		"scanAreaAmount",
+		"gradientFilterWidth",
+		"gaussianFilterSide",
+		"binarizationLevel",
+		"f",
+		"slopeAngle",
+		"lev",
+		"topMaskMarg",
+		"medFilterSide",
+		"gaussFilterSide",
+		"minFilterSide",
+		"binLevVarMask",
+		"dilate1RadiusVarMask",
+		"erodeRadiusVarMask",
+		"dilate2RadiusVarMask",
+		"maxCompNumVarMask",
+		"minCompThickVarMask",
+		"maxHolesNumVarMask",
+		"minHolesThickVarMask",
+		"histeresisThreshold1Gmask",
+		"histeresisThreshold2Gmask",
+		"radiusGaussFilterGmask",
+		"minMeanIntensityGmask",
+		"dilate1RadiusGmask",
+		"erodeRadiusGmask",
+		"dilate2RadiusGmask",
+		"maxCompNumGmask",
+		"minCompThickGmask",
+		"maxHolesNumGmask",
+		"minHolesThickGmask",
+		"histeresisThreshold3Gmask",
+		"histeresisThreshold4Gmask",
+		"dilate3RadiusGmask",
+		"erode2RadiusGmask",
+		"histeresisThreshold5Gmask",
+		"histeresisThreshold6Gmask",
+		"dilate4RadiusGmask",
+		"radiusGaussFilterComp",
+		"meanIntensityCompThreshold",
+		"dilateFinalRadius",
+		"erodeFinalRadius",
+		"smoothFinalRadius",
+		"maxCompNumFinal",
+		"minCompThickFinal",
+		"maxHolesNumFinal",
+		"minHolesThickFinal",
+		"fixedFrameWidth",
+		"smooth2FinalRadius",
+		"minMaxFilter",
+		"mincp1",
+		"mincp2",
+		"maxcp1",
+		"maxcp2",
+		"enhanceOnly",
 		NULL
 	};
-		
+	
+	// Default values
+	ImageBimodalize.brightness = 0.35;
+	ImageBimodalize.leftCut = 0.25;
+	ImageBimodalize.rightCut = 0.5;
+	ImageBimodalize.histSmooth = 25;
+	ImageBimodalize.reparSmooth = 10;
+	ImageCroppingSimple.minVariation = 0.01;
+	ImageCroppingSimple.marg = 5;
+	TopMask.scanAreaAmount = 0.1;
+	TopMask.gradientFilterWidth = 0.25;
+	TopMask.gaussianFilterSide = 5;
+	TopMask.binarizationLevel = 0.2;
+	TopMask.f = 3.5;
+	TopMask.slopeAngle = 1.5;
+	TopMask.lev = 0.95;
+	TopMask.marg = 5;
+	ImageSignificantMask.medFilterSide = 2;
+	ImageSignificantMask.gaussFilterSide = 3;
+	ImageSignificantMask.minFilterSide = 5;
+	ImageSignificantMask.binLevVarMask = 0.45;
+	ImageSignificantMask.dilate1RadiusVarMask = 5;
+	ImageSignificantMask.erodeRadiusVarMask = 35;
+	ImageSignificantMask.dilate2RadiusVarMask = 20;
+	ImageSignificantMask.maxCompNumVarMask = 2;
+	ImageSignificantMask.minCompThickVarMask = 75;
+	ImageSignificantMask.maxHolesNumVarMask = -1;
+	ImageSignificantMask.minHolesThickVarMask = 18;
+	ImageSignificantMask.histeresisThreshold1Gmask = 30;
+	ImageSignificantMask.histeresisThreshold2Gmask = 70;
+	ImageSignificantMask.radiusGaussFilterGmask = 10;
+	ImageSignificantMask.minMeanIntensityGmask = 0.2;
+	ImageSignificantMask.dilate1RadiusGmask = 10;
+	ImageSignificantMask.erodeRadiusGmask = 25;
+	ImageSignificantMask.dilate2RadiusGmask = 10;
+	ImageSignificantMask.maxCompNumGmask = 2;
+	ImageSignificantMask.minCompThickGmask = 75;
+	ImageSignificantMask.maxHolesNumGmask = -1;
+	ImageSignificantMask.minHolesThickGmask = 15;
+	ImageSignificantMask.histeresisThreshold3Gmask = 25;
+	ImageSignificantMask.histeresisThreshold4Gmask = 50;
+	ImageSignificantMask.dilate3RadiusGmask = 10;
+	ImageSignificantMask.erode2RadiusGmask = 5;
+	ImageSignificantMask.histeresisThreshold5Gmask = 45;
+	ImageSignificantMask.histeresisThreshold6Gmask = 90;
+	ImageSignificantMask.dilate4RadiusGmask = 4;
+	ImageSignificantMask.radiusGaussFilterComp = 30;
+	ImageSignificantMask.meanIntensityCompThreshold = 0.6;
+	ImageSignificantMask.dilateFinalRadius = 10;
+	ImageSignificantMask.erodeFinalRadius = 20;
+	ImageSignificantMask.smoothFinalRadius = 10;
+	ImageSignificantMask.maxCompNumFinal = 2;
+	ImageSignificantMask.minCompThickFinal = 75;
+	ImageSignificantMask.maxHolesNumFinal = 4;
+	ImageSignificantMask.minHolesThickFinal = 30;
+	ImageSignificantMask.fixedFrameWidth = 20;
+	ImageSignificantMask.smooth2FinalRadius = 20;
+	ImageEqualize.minMaxFilter = 5;
+	ImageEqualize.mincp1 = 0.75;
+	ImageEqualize.mincp2 = 0.9;
+	ImageEqualize.maxcp1 = 0.0;
+	ImageEqualize.maxcp2 = 0.25;
+
 	if (!PyArg_ParseTupleAndKeywords(
-		args, kwargs, "O|$fffiififfiffffiiiifiiiiiiiiiifiiiiiiiiiiiiiiifiiiiiiiiiiffffp", kwlist, // specifications
+		args, kwargs,
+		"O|$dddiididdiddddiiiidiiiiiiiiiidiiiiiiiiiiiiiiidiiiiiiiiiiddddp",
+		const_cast<char**>(kwlist), // specifications
 		&input, // argument
 		&ImageBimodalize.brightness,
 		&ImageBimodalize.leftCut,

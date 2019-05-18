@@ -67,7 +67,8 @@ def find_all_libs(root: str):
 
 # NBIS Extension
 extra_objects = find_all_libs(os.path.join(nbisdir, 'lib'))
-extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
+if sys.platform.startswith('linux'):
+	extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
 print('NBIS extra_objects:', extra_objects)
 nbis_ext = Extension(
 	'pynger.fingerprint.nbis',
@@ -82,16 +83,6 @@ nbis_ext = Extension(
 		os.path.join(nbisdir, 'include'),
 		np.get_include()],
 	extra_objects=extra_objects
-	# **find_libs(nbisdir, {
-	# 	'lib': (
-	# 			[
-	# 			'pca', 'pcautil', 'util', 'image', 'ioutil', 'ihead', 'z', # sgmnt
-	# 			'fft', # enhnc
-	# 			'an2k', 'mindtct', # mindtct
-	# 			],
-	# 			['lib{}.a' for _ in range(9)]
-	# 		)
-	# 	})
 	)
 	
 pani_ext = Extension(
@@ -104,7 +95,9 @@ pani_ext = Extension(
 
 # OpenCV 
 ang_seg_args = ['-std=gnu++14', '-Wextra']
-ang_seg_link_args = ['-fPIC', '-Wl,--verbose']
+ang_seg_link_args = ['-fPIC']
+if sys.platform.startswith('linux'):
+	ang_seg_link_args += ['-Wl,--verbose']
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 # As the linking order matters, put the corelib at the end and the adelib right before
 cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
@@ -119,7 +112,8 @@ extra_objects = [extra_objects[k] for k in indices]
 # LAPACK
 extra_objects += find_all_libs(os.path.join(lapackdir, 'lib'))
 # Envelope with group construct
-extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
+if sys.platform.startswith('linux'):
+	extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
 print('OpenCV extra_compile_args:', ang_seg_args)
 print('OpenCV extra_link_args:', ang_seg_link_args)
 print('OpenCV extra_objects:', extra_objects)

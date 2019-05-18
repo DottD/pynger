@@ -10,14 +10,15 @@ char* segmentation(unsigned char* data, const long* dim,
     unsigned char* enh_img_data, unsigned char* fg_mask_data,
 	const int enhance_only)
 {
-	// Declarations
+	// Declasrations
 	char *msg = NULL;
 	cv::Mat1b imageb, mask; // working variables
 	cv::Mat1d imaged;
 
 	try {
 		// Convert to OpenCV matrix
-		imageb = cv::Mat1b(dim[0], dim[1], data);
+		imageb = cv::Mat1b(dim[0], dim[1]);
+		memcpy(imageb.data, data, imageb.elemSize() * dim[0] * dim[1]);
 		imageb.convertTo(imaged, CV_64F, 1, 0);
 		
 		// Set the initial mask
@@ -29,7 +30,7 @@ char* segmentation(unsigned char* data, const long* dim,
 							ImageBimodalize.rightCut,
 							ImageBimodalize.histSmooth,
 							ImageBimodalize.reparSmooth);
-		if (enhance_only) {
+		if (!enhance_only) {
 			fm::ImageCroppingSimple(imaged, mask,
 								ImageCroppingSimple.minVariation,
 								ImageCroppingSimple.marg);

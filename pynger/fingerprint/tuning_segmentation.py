@@ -20,16 +20,22 @@ class SegmentationEstimator(BaseEstimator, ClassifierMixin):
         for img in X:
             _, mask = self.segment(img)
             yield mask.astype(bool)
-    
-    def score(self, X, y=None):
+
+    def get_scores(self, X, y=None):
+        " Get the similarity measure over all the dataset "
         if y is None:
             raise ValueError("A true y must be given")
         # Split the iterator
         X1, X2 = itertools.tee(X, 2)
         # Get the predicted y
         pred_y = self.predict(X1)
-        # Accumulate the average error
+        # Compute the similarity measure
         similarity = (self.compute_error(ty, py) for ty, py in zip(y, pred_y))
+        return similarity
+    
+    def score(self, X, y=None):
+        # Compute the average error
+        similarity = self.get_scores(X, y)
         return mean(similarity)
 
     def segment(self, image) -> Tuple[Image, Mask]:
