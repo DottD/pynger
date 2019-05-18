@@ -42,7 +42,8 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
         sample_size (int): How many samples should be picked from the dataset at each step, or negative values to take the whole of it (defaults to 10)
         n_iter (int): How many iterations should be performed (defaults to 10)
         n_jobs (int): How many processes should be used for parallel evaluations, or a negative value to use as many threads as possible (defaults to -1)
-        verbose (bool): Whether information about optimization should be sent (defaults to True)
+        verbose (bool): Whether information about optimization should be sent (defaults to False)
+        verboseTelegram (bool): Whether information about optimization should be sent (defaults to True)
         load (str): Path to a saved instance of the CMA-ES optimizer that needs to be loaded (defaults to None - i.e. no effect)
         outDir (str): Path to the output folder, where the partial and final results will be saved (defaults to the current directory)
         retFuns (bool): When True, besides the optimization current state, returns also the functions
@@ -59,7 +60,8 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
     sample_size = kwargs.get('sample_size', 10)
     n_iter = kwargs.get('n_iter', 10)
     n_jobs = kwargs.get('n_jobs', -1)
-    verbose = kwargs.get('verbose', True)
+    verbose = kwargs.get('verbose', False)
+    verboseTelegram = kwargs.get('verboseTelegram', True)
     load = kwargs.get('load', None)
     outDir = kwargs.get('outDir', os.path.abspath(os.path.curdir))
     retFuns = kwargs.get('retFuns', True)
@@ -160,7 +162,7 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
         with open(load, 'rb') as f:
             search_results = pickle.load(f)
 
-    if verbose:
+    if verboseTelegram:
         try:
             initial_message = "<b>Started parameters optimization:</b>\n<pre>\n\n"
             trunc = 30
@@ -198,14 +200,16 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
                 # Sample some solutions
                 solutions = search_results.ask()
                 # --- verbose ---
-                if verbose and (np.array(solutions) < 0).any() or (np.array(solutions) > 1).any():
+                if (np.array(solutions) < 0).any() or (np.array(solutions) > 1).any():
                     log = "Solutions out of bounds..."
-                    print(log)
-                    try:
-                        bot.send_message(chat_id=41795159, text=log, parse_mode=telegram.ParseMode.MARKDOWN)
-                    except Exception as err:
-                        print("Cannot send message to Bot due to", err)
-                        continue
+                    if verbose:
+                        print(log)
+                    if verboseTelegram:
+                        try:
+                            bot.send_message(chat_id=41795159, text=log, parse_mode=telegram.ParseMode.MARKDOWN)
+                        except Exception as err:
+                            print("Cannot send message to Bot due to", err)
+                            continue
                 # ---------------
                 # Test them and compute the update
                 evals = parallel(delayed(fit_fun)(_x) for _x in solutions)
@@ -219,10 +223,11 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
                 with open(curpar, 'w') as f:
                     yaml.dump(type_fixing(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist())))), f, Dumper=yaml.Dumper)
                 # --- verbose ---
+                print('{{"metric": "Best Score", "value": {}}}'.format(search_results.best.f))
+                log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                 if verbose:
-                    print({"metric": "Best Score", "value": search_results.best.f})
-                    log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                     print(log)
+                if verboseTelegram:
                     try:
                         bot.send_message(chat_id=41795159, text=log, parse_mode=telegram.ParseMode.MARKDOWN)
                     except Exception as err:
