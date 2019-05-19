@@ -92,6 +92,15 @@ class LROEstimator(BaseEstimator, RegressorMixin):
             }
             field = self.compute_of(image, mask, **bd_specs)
             yield LROEstimator.serialize_yrow(field)
+
+    def single_score(self, X, pred_y, true_y):
+        """ Computes the score on a single fingerprint. """
+        # Load predicted and ground truth fields
+        field = LROEstimator.deserialize_yrow(pred_y)
+        gfield = LROEstimator.deserialize_yrow(true_y)
+        _, mask, _ = LROEstimator.deserialize_Xrow(X)
+        # Compute the error
+        return self.compute_error(field, gfield, mask)
     
     def score(self, X, y=None):
         if y is None:
@@ -104,13 +113,8 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         pred_y = self.predict(X1)
         # Accumulate the average error
         avgerr = []
-        for py, ty, x in zip(pred_y, y, X2):
-            # Load predicted and ground truth fields
-            field = LROEstimator.deserialize_yrow(py)
-            gfield = LROEstimator.deserialize_yrow(ty)
-            _, mask, _ = LROEstimator.deserialize_Xrow(x)
-            # Compute the error
-            loc_avgerr = self.compute_error(field, gfield, mask)
+        for x, py, ty in zip(X, pred_y, true_y):
+            loc_avgerr = self.single_score(x, py, ty)
             # Append the results to avgerr accumulator
             avgerr.append(loc_avgerr)
         # Compute the mean average error, if possible
