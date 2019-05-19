@@ -154,7 +154,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         options = {
             'bounds': [0, 1],
             'BoundaryHandler': cma.BoundTransform,
-            'tolfun': 1e-4,
+            'tolfun': 1e-2,
             'tolx': 1e-5,
             'verb_log': -1,
             'maxiter': n_iter,
