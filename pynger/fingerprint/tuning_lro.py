@@ -201,8 +201,12 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             step_x: horizontal distance between sample points (in pixels)
             step_y: vertical distance between sample points (in pixels)
         """
-        image, _ = self.segmentor.segment(image)
-        mask = convert_to_full(mask, **bd_specs)
+        preprocessing = bd_specs.get('preprocessing', True)
+        if 'preprocessing' in bd_specs:
+            del bd_specs['preprocessing']
+        if preprocessing:
+            image, _ = self.segmentor.segment(image)
+            mask = convert_to_full(mask, **bd_specs)
         lro, rel = LRO(
             image, mask=mask, 
             ridge_dist=self.ridge_dist,
@@ -215,10 +219,6 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
 
 class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
     def __init__(self,
-        ridge_dist: int = 10,
-        number_angles: int = 36,
-        along_sigma_ratio: float = 0.85,
-        ortho_sigma: float = 1.0,
         LRF_min_disk_size: int = 10,
         LRF_rel_check_grid_step: int = 10,
         LRF_rel_check_threshold: float = 30,
@@ -226,9 +226,6 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         LRF_segment_length: int = 30,
         LRF_gaussian_smooth_std: float = 0.1,
         LRO1_scale_factor: float = 1.5,
-        LRO1_number_angles: int = 36,
-        LRO1_along_sigma_ratio: float = 0.85,
-        LRO1_ortho_sigma: float = 1.0,
         SM1_radius_factor: float = 1,
         SM1_sample_dist: float = 3,
         SM1_relax: float = 1,
@@ -238,9 +235,6 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         DM1_shrink_rad_factor: float = 3.5,
         DM1_blur_stddev: float = 0.5,
         LRO2_scale_factor: float = 0.5,
-        LRO2_number_angles: int = 36,
-        LRO2_along_sigma_ratio: float = 0.85,
-        LRO2_ortho_sigma: float = 1.0,
         SM2_radius_factor: float = 0.7,
         SM2_sample_dist: float = 3,
         SM2_relax: float = 0.9,
@@ -264,110 +258,28 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         IS_GMASK_dilate_rad_factor: float = 2.0,
         IS_GMASK_blur_stddev: float = 0.5) :
         """ Initializes and stores all the algorithm's parameters. """
-        self.ridge_dist = ridge_dist
-        self.number_angles = number_angles
-        self.along_sigma_ratio = along_sigma_ratio
-        self.ortho_sigma = ortho_sigma
-        self.LRF_min_disk_size = LRF_min_disk_size
-        self.LRF_rel_check_grid_step = LRF_rel_check_grid_step
-        self.LRF_rel_check_threshold = LRF_rel_check_threshold
-        self.LRF_segment_n_points = LRF_segment_n_points
-        self.LRF_segment_length = LRF_segment_length
-        self.LRF_gaussian_smooth_std = LRF_gaussian_smooth_std
-        self.LRO1_scale_factor = LRO1_scale_factor
-        self.LRO1_number_angles = LRO1_number_angles
-        self.LRO1_along_sigma_ratio = LRO1_along_sigma_ratio
-        self.LRO1_ortho_sigma = LRO1_ortho_sigma
-        self.SM1_radius_factor = SM1_radius_factor
-        self.SM1_sample_dist = SM1_sample_dist
-        self.SM1_relax = SM1_relax
-        self.DM1_radius_factor = DM1_radius_factor
-        self.DM1_sample_dist = DM1_sample_dist
-        self.DM1_drift_threshold = DM1_drift_threshold
-        self.DM1_shrink_rad_factor = DM1_shrink_rad_factor
-        self.DM1_blur_stddev = DM1_blur_stddev
-        self.LRO2_scale_factor = LRO2_scale_factor
-        self.LRO2_number_angles = LRO2_number_angles
-        self.LRO2_along_sigma_ratio = LRO2_along_sigma_ratio
-        self.LRO2_ortho_sigma = LRO2_ortho_sigma
-        self.SM2_radius_factor = SM2_radius_factor
-        self.SM2_sample_dist = SM2_sample_dist
-        self.SM2_relax = SM2_relax
-        self.DMASK2_blur_stddev = DMASK2_blur_stddev
-        self.DMASK2_threshold = DMASK2_threshold
-        self.DMASK2_ccomp_ext_thres = DMASK2_ccomp_ext_thres
-        self.DMASK2_dil_rad_factor = DMASK2_dil_rad_factor
-        self.DM3_radius_factor = DM3_radius_factor
-        self.DM3_sample_dist = DM3_sample_dist
-        self.DM3_drift_threshold = DM3_drift_threshold
-        self.DM3_shrink_rad_factor = DM3_shrink_rad_factor
-        self.DM3_ccomp_ext_thres = DM3_ccomp_ext_thres
-        self.DM3_dil_rad_factor = DM3_dil_rad_factor
-        self.IS_max_iterations = IS_max_iterations
-        self.IS_binlev_step = IS_binlev_step
-        self.IS_SMOOTH_radius_factor = IS_SMOOTH_radius_factor
-        self.IS_SMOOTH_sample_dist = IS_SMOOTH_sample_dist
-        self.IS_SMOOTH_relaxation = IS_SMOOTH_relaxation
-        self.IS_DMASK_bin_level = IS_DMASK_bin_level
-        self.IS_GMASK_erode_rad_factor = IS_GMASK_erode_rad_factor
-        self.IS_GMASK_dilate_rad_factor = IS_GMASK_dilate_rad_factor
-        self.IS_GMASK_blur_stddev = IS_GMASK_blur_stddev
+        pars = inspect.signature(AnGaFIS_Seg_Estimator.__init__)
+        for par in pars.parameters.keys():
+            if par != 'self':
+                setattr(self, par, eval(par))
+        self.segmentor = AnGaFIS_Seg_Estimator(enhanceOnly=True)
+        self.lro_estimator = AnGaFIS_OF_Estimator()
 
     def compute_of(self, image: Image, mask: Mask, **bd_specs) -> Field:
         """ See documentation of super.compute_of """
+        image, _ = self.segmentor.segment(image)
         mask = convert_to_full(mask, **bd_specs)
-        lro, rel = LRO(
-            image, mask=mask, 
-            ridge_dist=self.ridge_dist,
-            number_angles=self.number_angles,
-            along_sigma_ratio=self.along_sigma_ratio,
-            ortho_sigma=self.ortho_sigma)
-        field = polar2cart(lro, rel, retField=True)
+        field = self.lro_estimator.compute_of(image, mask, **bd_specs, preprocessing=False)
         field = reliable_iterative_smoothing(image, mask, field, 
-            LRF__min_disk_size=self.LRF_min_disk_size,
-            LRF__rel_check_grid_step=self.LRF_rel_check_grid_step,
-            LRF__rel_check_threshold=self.LRF_rel_check_threshold,
-            LRF__segment_n_points=self.LRF_segment_n_points,
-            LRF__segment_length=self.LRF_segment_length,
-            LRF__gaussian_smooth_std=self.LRF_gaussian_smooth_std,
-            LRO1__scale_factor=self.LRO1_scale_factor,
-            LRO1__number_angles=self.LRO1_number_angles,
-            LRO1__along_sigma_ratio=self.LRO1_along_sigma_ratio,
-            LRO1__ortho_sigma=self.LRO1_ortho_sigma,
-            SM1__radius_factor=self.SM1_radius_factor,
-            SM1__sample_dist=self.SM1_sample_dist,
-            SM1__relax=self.SM1_relax,
-            DM1__radius_factor=self.DM1_radius_factor,
-            DM1__sample_dist=self.DM1_sample_dist,
-            DM1__drift_threshold=self.DM1_drift_threshold,
-            DM1__shrink_rad_factor=self.DM1_shrink_rad_factor,
-            DM1__blur_stddev=self.DM1_blur_stddev,
-            LRO2__scale_factor=self.LRO2_scale_factor,
-            LRO2__number_angles=self.LRO2_number_angles,
-            LRO2__along_sigma_ratio=self.LRO2_along_sigma_ratio,
-            LRO2__ortho_sigma=self.LRO2_ortho_sigma,
-            SM2__radius_factor=self.SM2_radius_factor,
-            SM2__sample_dist=self.SM2_sample_dist,
-            SM2__relax=self.SM2_relax,
-            DMASK2__blur_stddev=self.DMASK2_blur_stddev,
-            DMASK2__threshold=self.DMASK2_threshold,
-            DMASK2__ccomp_ext_thres=self.DMASK2_ccomp_ext_thres,
-            DMASK2__dil_rad_factor=self.DMASK2_dil_rad_factor,
-            DM3__radius_factor=self.DM3_radius_factor,
-            DM3__sample_dist=self.DM3_sample_dist,
-            DM3__drift_threshold=self.DM3_drift_threshold,
-            DM3__shrink_rad_factor=self.DM3_shrink_rad_factor,
-            DM3__ccomp_ext_thres=self.DM3_ccomp_ext_thres,
-            DM3__dil_rad_factor=self.DM3_dil_rad_factor,
-            IS__max_iterations=self.IS_max_iterations,
-            IS__binlev_step=self.IS_binlev_step,
-            IS__SMOOTH__radius_factor=self.IS_SMOOTH_radius_factor,
-            IS__SMOOTH__sample_dist=self.IS_SMOOTH_sample_dist,
-            IS__SMOOTH__relaxation=self.IS_SMOOTH_relaxation,
-            IS__DMASK__bin_level=self.IS_DMASK_bin_level,
-            IS__GMASK__erode_rad_factor=self.IS_GMASK_erode_rad_factor,
-            IS__GMASK__dilate_rad_factor=self.IS_GMASK_dilate_rad_factor,
-            IS__GMASK__blur_stddev=self.IS_GMASK_blur_stddev
+            # Take some arguments from the lro_estimator
+            LRO1__number_angles=self.lro_estimator.number_angles,
+            LRO1__along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
+            LRO1__ortho_sigma=self.lro_estimator.ortho_sigma,
+            LRO2__number_angles=self.lro_estimator.number_angles,
+            LRO2__along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
+            LRO2__ortho_sigma=self.lro_estimator.ortho_sigma,
+            # Pass all the arguments of the initializer
+            **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'}
         )
         field = subsample(field, is_field=True, **bd_specs)
         return field

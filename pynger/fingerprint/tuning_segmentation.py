@@ -155,9 +155,14 @@ class AnGaFIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
     def segment(self, image):
         """ Segments the input fingerprint image """
         pars = inspect.signature(AnGaFIS_Seg_Estimator.__init__)
-        return segment_enhance(image,
-            **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'},
-        )
+        try:
+            ret = segment_enhance(image,
+                **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'},
+            )
+        except Exception as err:
+            print("Error in segmentation:", err)
+            ret = (image, np.ones_like(image, dtype=bool))
+        return ret
 
 class NBIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
     def __init__(self,
