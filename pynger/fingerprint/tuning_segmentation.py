@@ -169,10 +169,10 @@ class AnGaFIS_Seg_Estimator(ScoreBaddeleyDissimilarity, SegmentationEstimator):
         fixedFrameWidth: int = 20,
         smooth2FinalRadius: int = 2,
         minMaxFilter: int = 5,
-        mincp1: float = 1,
-        mincp2: float = 2,
-        maxcp1: float = 1,
-        maxcp2: float = 2,
+        mincp1: float = 0.75,
+        mincp2: float = 0.9,
+        maxcp1: float = 0.0,
+        maxcp2: float = 0.25,
         enhanceOnly: bool = False,
     ):
         """ Initializes and stores all the algorithm's parameters """

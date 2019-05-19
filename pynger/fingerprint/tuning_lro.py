@@ -205,7 +205,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         if 'preprocessing' in bd_specs:
             del bd_specs['preprocessing']
         if preprocessing:
-            image, _ = self.segmentor.segment(image)
+            image, _ = self.segmentor.segment(image.astype('uint8'))
             mask = convert_to_full(mask, **bd_specs)
         lro, rel = LRO(
             image, mask=mask, 
@@ -267,7 +267,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
 
     def compute_of(self, image: Image, mask: Mask, **bd_specs) -> Field:
         """ See documentation of super.compute_of """
-        image, _ = self.segmentor.segment(image)
+        image, _ = self.segmentor.segment(image.astype('uint8'))
         mask = convert_to_full(mask, **bd_specs)
         field = self.lro_estimator.compute_of(image, mask, **bd_specs, preprocessing=False)
         field = reliable_iterative_smoothing(image, mask, field, 

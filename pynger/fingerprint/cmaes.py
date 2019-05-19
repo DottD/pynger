@@ -28,13 +28,13 @@ def static_var(varname, value):
         return func
     return decorate
 
-def cmaes_optimize(estimator_cls, X, y, load_imgs,
+def cmaes_optimize(estimator, X, y, load_imgs,
     param_space, fixed_variables, initial_params,
     **kwargs):
     """ Optimizes the parameters of estimator using the CMA-ES algorithm.
 
     Arguments:
-        estimator_cls (class): Estimator class on which parameters optimization should be performed
+        estimator (Estimator): sklearn.Estimator on which parameters optimization should be performed
         reloadDS (function): Function that returns or yields (preferable for large datasets) pairs of (X, y), where X are the inputs for the estimator and y are its ground truth values
         param_space (dict): Maps parameter names, even those fixed, to their bounds (es. {name: [min, max], ...})
         fixed_variables (dict): Maps parameter names to their fixed values
@@ -139,7 +139,9 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
         kwa = type_fixing(kwa)
         # Add the fixed variables before the computation
         kwa.update(fixed_variables)
-        return 1.0 - estimator_cls(**kwa).score( XX, yy )
+        # Set parameters
+        estimator.set_params(**kwa)
+        return 1.0 - estimator.score( XX, yy )
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables

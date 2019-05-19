@@ -12,17 +12,18 @@ char* segmentation(unsigned char* data, const long* dim,
 {
 	// Declasrations
 	char *msg = NULL;
-	cv::Mat1b imageb, mask; // working variables
-	cv::Mat1d imaged;
+	fm::Mask__ imageb, mask; // working variables
+	fm::Image__ imaged;
 
 	try {
 		// Convert to OpenCV matrix
-		imageb = cv::Mat1b(dim[0], dim[1]);
+		imageb = fm::Mask__(dim[0], dim[1]);
 		memcpy(imageb.data, data, imageb.elemSize() * dim[0] * dim[1]);
-		imageb.convertTo(imaged, CV_64F, 1, 0);
+		imageb.convertTo(imaged, CV_64F);
+		fm::rescale(imaged);
 		
 		// Set the initial mask
-		mask = cv::Mat1b::ones(imaged.size()) * MASK_TRUE;
+		mask = fm::Mask__::ones(imaged.size()) * MASK_TRUE;
 		// Processing
 		fm::imageBimodalize(imaged, imaged,
 							ImageBimodalize.brightness,
@@ -95,7 +96,8 @@ char* segmentation(unsigned char* data, const long* dim,
 						mask);
 
 		// Convert bask to unsigned char matrix
-		imaged.convertTo(imageb, CV_8U, 255, 0);
+		fm::rescale(imaged, 255.0);
+		imaged.convertTo(imageb, CV_8U);
 
 		// Copy to destination pointers
 		memcpy(enh_img_data, imageb.data, sizeof(unsigned char)*dim[0]*dim[1]);
