@@ -141,7 +141,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         kwa.update(fixed_variables)
         # Set parameters
         estimator.set_params(**kwa)
-        return 1.0 - estimator.score( XX, yy )
+        return - estimator.score( XX, yy )
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables
