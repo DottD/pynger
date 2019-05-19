@@ -139,7 +139,7 @@ def cmaes_optimize(estimator_cls, X, y, load_imgs,
         kwa = type_fixing(kwa)
         # Add the fixed variables before the computation
         kwa.update(fixed_variables)
-        return - estimator_cls(**kwa).score( XX, yy )
+        return 1.0 - estimator_cls(**kwa).score( XX, yy )
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables

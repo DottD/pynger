@@ -5,6 +5,7 @@ from statistics import mean
 import numpy as np
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.metrics import balanced_accuracy_score
+from scipy.ndimage.morphology import distance_transform_cdt
 
 from pynger.types import Field, Image, List, Mask, Union, Tuple
 from pynger.fingerprint.cangafris import segment_enhance
@@ -19,7 +20,7 @@ class SegmentationEstimator(BaseEstimator, ClassifierMixin):
         # Make prediction
         for img in X:
             _, mask = self.segment(img)
-            yield mask.astype(bool)
+            yield ~mask.astype(bool) # ~ needed for True values on the foreground
 
     def get_scores(self, X, y=None):
         " Get the similarity measure over all the dataset "
@@ -82,7 +83,35 @@ class ScoreElementwiseAccuracy:
         pred_mask = pred_mask > 0
         return balanced_accuracy_score(true_mask.ravel(), pred_mask.ravel())
 
-class AnGaFIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
+class ScoreBaddeleyDissimilarity:
+    def compute_error(self, true_mask: Mask, pred_mask: Mask, c: int = 5, p: float = 2):
+        """ Compute the Baddeley Error for binary images.
+        
+        Note:
+            A.J. Baddeley - "An Error Metric for Binary Images"
+        """
+        # Ensure that masks have binary values
+        true_mask = true_mask > 0
+        pred_mask = pred_mask > 0
+        # Handle masks filled with the same value
+        xor_mask = true_mask ^ pred_mask
+        if (~xor_mask).all(): # Masks equal
+            return 1.0
+        elif xor_mask.all(): # Masks completely different
+            return 0.0
+        # Compute metric
+        true_edt = distance_transform_cdt(true_mask, metric='taxicab').astype(float)
+        true_edt = np.minimum(true_edt, c)
+        true_edt[true_edt < 0] = c # where a distance cannot be computed, set to maximum
+        pred_edt = distance_transform_cdt(pred_mask, metric='taxicab').astype(float)
+        pred_edt = np.minimum(pred_edt, c)
+        pred_edt[pred_edt < 0] = c
+        dist = np.abs(true_edt - pred_edt)
+        dist /= c # c is the maximum possible distance
+        dist = (dist**p).mean()**(1/p)
+        return 1.0-dist
+
+class AnGaFIS_Seg_Estimator(ScoreBaddeleyDissimilarity, SegmentationEstimator):
     def __init__(self,
         brightness: float = 0.35,
         leftCut: float = 0.25,
