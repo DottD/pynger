@@ -113,7 +113,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         pred_y = self.predict(X1)
         # Accumulate the average error
         avgerr = []
-        for x, py, ty in zip(X, pred_y, true_y):
+        for x, py, ty in zip(X, pred_y, y):
             loc_avgerr = self.single_score(x, py, ty)
             # Append the results to avgerr accumulator
             avgerr.append(loc_avgerr)
