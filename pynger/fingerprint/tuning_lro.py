@@ -2,6 +2,7 @@ import pickle
 import time
 import datetime
 import itertools
+import inspect
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
@@ -258,7 +259,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         IS_GMASK_dilate_rad_factor: float = 2.0,
         IS_GMASK_blur_stddev: float = 0.5) :
         """ Initializes and stores all the algorithm's parameters. """
-        pars = inspect.signature(AnGaFIS_Seg_Estimator.__init__)
+        pars = inspect.signature(AnGaFIS_OF_Estimator_Complete.__init__)
         for par in pars.parameters.keys():
             if par != 'self':
                 setattr(self, par, eval(par))
@@ -267,6 +268,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
 
     def compute_of(self, image: Image, mask: Mask, **bd_specs) -> Field:
         """ See documentation of super.compute_of """
+        pars = inspect.signature(AnGaFIS_OF_Estimator_Complete.__init__)
         image, _ = self.segmentor.segment(image.astype('uint8'))
         mask = convert_to_full(mask, **bd_specs)
         field = self.lro_estimator.compute_of(image, mask, **bd_specs, preprocessing=False)
