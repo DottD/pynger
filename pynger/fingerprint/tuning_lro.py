@@ -7,7 +7,7 @@ import inspect
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 
-from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart
+from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart, halve_angle, double_angle
 from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.fingerprint.orientation import LRO
 from pynger.fingerprint.refinement import reliable_iterative_smoothing
@@ -179,7 +179,7 @@ class ScoreAngleDiffRMSD:
         return np.sqrt(diff.sum() / np.count_nonzero(mask))
 
 class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
-    def __init__(self, ridge_dist: int = 10, number_angles: int = 36, along_sigma_ratio: float = 0.85, ortho_sigma: float = 1.0):
+    def __init__(self, ridge_dist: int = 10, number_angles: int = 36, along_sigma_ratio: float = 0.3, ortho_sigma: float = 0.05):
         """ Initializes and stores all the algorithm's parameters. """
         self.ridge_dist = ridge_dist
         self.number_angles = number_angles

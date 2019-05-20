@@ -3,7 +3,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from pynger.fingerprint.operators import drifter_mask, smoother, adjuster
 from pynger.fingerprint.orientation import LRO, LRF
-from pynger.field.manipulation import cart2polar, polar2cart, normalize, magnitude
+from pynger.field.manipulation import cart2polar, polar2cart, normalize, magnitude, double_angle, halve_angle
 from pynger.string.manipulation import remove_prefix
 from pynger.types import Image, Mask, Field
 from pynger.mask.manipulation import distance_erosion, gaussian_dilation, gaussian_erosion, ccomp_select_cmass
@@ -47,7 +47,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     Args:
         image (numpy.array): Image with the fingerprint to process
         mask (numpy.array or None): Mask with relevant information
-        field (numpy.array): Field that will be refined
+        field (numpy.array): Field that will be refined (non-doubled-phase)
 
     Keyword Args:
 		LRF__min_disk_size (int): size of the disk neighborhood of each point for the reliability check (defaults to 10)
@@ -143,6 +143,8 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         'mask': mask,
     }
     field1 = polar2cart(*LRO(image, **local_kwargs), retField=True)
+    # Double the phase angle to comply with operators requirements
+    field1 = double_angle(field1)
 
     # Perform the smoothing of the original field
     local_kwargs = {
@@ -180,6 +182,8 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         'mask': mask,
     }
     field2 = polar2cart(*LRO(image, **local_kwargs), retField=True)
+    # Double the phase angle to comply with operators requirements
+    field2 = double_angle(field2)
 
     # Perform the adjusting of the two fields
     local_kwargs = {
@@ -228,13 +232,16 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     else:
         is_field = iterative_smoothing(afield1, ldmask, period)
 
+    # Halves the phase angle, to comply with the input format
+    is_field = halve_angle(is_field)
+
     return is_field
 
 def iterative_smoothing(field: Field, mask: Mask, period: float, **kwargs) -> Field:
     """ Iteratively enhances the input field through the smoother operator.
 
     Args:
-        field: Field to be enhanced, shape ``(:,:,2)``
+        field: Field (doubled-phase) to be enhanced, shape ``(:,:,2)``
         mask: 
         period: Fingerprint's spatial period, i.e. the average ridge distance
     
