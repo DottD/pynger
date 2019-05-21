@@ -227,7 +227,9 @@ def cmaes_optimize(estimator, X, y, load_imgs,
                     pickle.dump(search_results, f)
                 curpar = os.path.splitext(outDir)[0] + "_bestpar_{}.yml".format(curiter)
                 with open(curpar, 'w') as f:
-                    yaml.dump(type_fixing(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist())))), f, Dumper=yaml.Dumper)
+                    bestpar = type_fixing(decode(dict(zip( nonfixed_keys, search_results.result.xbest.tolist() ))))
+                    bestpar.update(fixed_variables)
+                    yaml.dump(bestpar, f, Dumper=yaml.Dumper)
                 # --- verbose ---
                 print('{{"metric": "Least Error %", "value": {:.2f}, "step": {}}}'.format(search_results.best.f*100.0, curiter))
                 log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
