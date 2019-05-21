@@ -151,11 +151,12 @@ class FieldProxy(Proxy):
                 put_uint8(a)
                 put_uint8(m)
 
-def loadDataset(path: str):
+def loadDataset(path: str, loadGT: bool = True):
     """ Loads the FVC-TEST dataset.
 
     Args:
         path: Directory with the FVC-TEST dataset.
+        loadGT: whether to load the ground truth information or not.
 
     Return:
         A generator of pairs (X, y) where X has the original image, its mask and its border specifications, and y is the corresponding orientation field ground truth.
@@ -178,11 +179,14 @@ def loadDataset(path: str):
             _mask = convert_to_full(mask, border_x=bd, border_y=bd, step_x=step, step_y=step, mode='constant')
             image = image[:_mask.shape[0], :_mask.shape[1]]
             # Load the ground truth field
-            field_path = os.path.splitext(image_path)[0]+'.gt'
-            lro, _ = FieldProxy().read(field_path, full=False)
-            field = polar2cart(lro, 1, retField=True)
-            # Serialize input data and append to X and the ground truth information
-            yield (LROEstimator.serialize_Xrow(image, mask, specs), LROEstimator.serialize_yrow(field))
+            if loadGT:
+                field_path = os.path.splitext(image_path)[0]+'.gt'
+                lro, _ = FieldProxy().read(field_path, full=False)
+                field = polar2cart(lro, 1, retField=True)
+                # Serialize input data and append to X and the ground truth information
+                yield (LROEstimator.serialize_Xrow(image, mask, specs), LROEstimator.serialize_yrow(field))
+            else:
+                yield (LROEstimator.serialize_Xrow(image, mask, specs), image_path)
 
 def countDatasetElements(path):
     with open(path, 'r') as f:

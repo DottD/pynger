@@ -89,21 +89,16 @@ def LRF(image, lro, rel, **kwargs):
 	min_rel = minimum_filter(rel, footprint=circleWin(min_disk_size))
 	checked = np.zeros(min_rel.shape, dtype=bool)
 	checked[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] = min_rel[sp_len:-sp_len:grid_step, sp_len:-sp_len:grid_step] >= grid_thres
-	del min_rel
 	I, J = np.nonzero(checked)
-	del checked
 	if I.size==0 or J.size==0:
 		warn('No point passed the reliability check', RuntimeWarning)
 		return None
 	# Get segments by interpolation
 	t = np.linspace(-sp_len, sp_len, sp_num) # endpoint included
 	segments_xy = np.array([[j-np.sin(lro[i,j])*t, i+np.cos(lro[i,j])*t] for i,j in zip(I,J)])
-	del t
 	segments = map_coordinates(image, [segments_xy[:,0,:], segments_xy[:,1,:]], order=1, prefilter=False)
-	del segments_xy
 	# Compute spectrum of each segment
 	dft = rfft(segments, axis=1)**2
-	del segments
 	spectrum = np.zeros((dft.shape[0], dft.shape[1]//2+1))
 	spectrum[:,0] = 0 # null DC component (zero mean)
 	if sp_num % 2 == 0: # even
@@ -111,9 +106,7 @@ def LRF(image, lro, rel, **kwargs):
 		spectrum[:,-1] = dft[:,-1]
 	else: # odd
 		spectrum[:,1:] = dft[:,1::2]+dft[:,2::2]
-	del dft
 	smoothed = gaussian_filter1d(spectrum, sigma*sp_len, axis=1)
-	del spectrum
 	# Find the first peak, then the frequency
 	max_i, max_j = argrelmax(smoothed, axis=1, order=2)
 	if max_i.size==0 or max_j.size==0:

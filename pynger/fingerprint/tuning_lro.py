@@ -232,7 +232,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         LRF_rel_check_threshold: float = 30,
         LRF_segment_n_points: int = 15,
         LRF_segment_length: int = 30,
-        LRF_gaussian_smooth_std: float = 0.1,
+        LRF_gaussian_smooth_std: float = 0.05,
         LRO1_scale_factor: float = 1.5,
         SM1_radius_factor: float = 1,
         SM1_sample_dist: float = 3,
