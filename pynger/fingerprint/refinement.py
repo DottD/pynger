@@ -111,7 +111,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         
         The whole algorithm is divided into three steps, after the very first operations, i.e. the ``LRF__`` step. The number present in some identifiers, such as ``DM1__``, refers to such steps.
     """
-    kwargs = _input_sanity_check(kwargs, reliable_iterative_smoothing)
+    # kwargs = _input_sanity_check(kwargs, reliable_iterative_smoothing)
 
     # Estimate the average ridge distance (period)
     local_kwargs = _filter_kwargs(kwargs, 'LRF_')
