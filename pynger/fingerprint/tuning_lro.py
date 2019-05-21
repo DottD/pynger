@@ -281,12 +281,12 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         field = self.lro_estimator.compute_of(image, mask, **bd_specs, onlyLRO=True)
         field = reliable_iterative_smoothing(image, mask, field, 
             # Take some arguments from the lro_estimator
-            LRO1__number_angles=self.lro_estimator.number_angles,
-            LRO1__along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
-            LRO1__ortho_sigma=self.lro_estimator.ortho_sigma,
-            LRO2__number_angles=self.lro_estimator.number_angles,
-            LRO2__along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
-            LRO2__ortho_sigma=self.lro_estimator.ortho_sigma,
+            LRO1_number_angles=self.lro_estimator.number_angles,
+            LRO1_along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
+            LRO1_ortho_sigma=self.lro_estimator.ortho_sigma,
+            LRO2_number_angles=self.lro_estimator.number_angles,
+            LRO2_along_sigma_ratio=self.lro_estimator.along_sigma_ratio,
+            LRO2_ortho_sigma=self.lro_estimator.ortho_sigma,
             # Pass all the arguments of the initializer
             **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'}
         )
