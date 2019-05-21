@@ -158,12 +158,12 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         options = {
             'bounds': [0, 1],
             'BoundaryHandler': cma.BoundTransform,
-            'tolfun': 1e-2,
+            'tolfun': 1e-4,
             'tolx': 1e-5,
             'verb_log': -1,
             'maxiter': n_iter,
         }
-        search_results = cma.CMAEvolutionStrategy(x0, 0.25, inopts=options)
+        search_results = cma.CMAEvolutionStrategy(x0, 0.4, inopts=options)
     else:
         with open(load, 'rb') as f:
             search_results = pickle.load(f)
@@ -229,7 +229,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
                 with open(curpar, 'w') as f:
                     yaml.dump(type_fixing(decode(dict(zip(nonfixed_keys, search_results.result.xbest.tolist())))), f, Dumper=yaml.Dumper)
                 # --- verbose ---
-                print('{{"metric": "Best Score", "value": {}, "step": {}}}'.format(search_results.best.f, curiter))
+                print('{{"metric": "Least Error %", "value": {:.2f}, "step": {}}}'.format(search_results.best.f*100.0, curiter))
                 log = disp_cma_results(search_results, scale=decode, names=nonfixed_keys)
                 if verbose:
                     print(log)
