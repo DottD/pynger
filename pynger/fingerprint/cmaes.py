@@ -132,6 +132,9 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         
         Args:
             x: list of values whose order corresponds to nonfixed_keys
+
+        Return:
+            The loss, computed as 1-score, where score is obtained through the score method of the estimator.
         """
         kwa = dict(zip(nonfixed_keys, x))
         kwa = decode(kwa)
@@ -141,7 +144,8 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         kwa.update(fixed_variables)
         # Set parameters
         estimator.set_params(**kwa)
-        return - estimator.score( XX, yy )
+        loss = 1.0 - estimator.score( XX, yy )
+        return loss
     
     if load is None:
         # Get the initial set of parameters, according to the current parameters space and fixed variables

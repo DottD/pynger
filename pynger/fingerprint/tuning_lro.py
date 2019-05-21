@@ -93,8 +93,8 @@ class LROEstimator(BaseEstimator, RegressorMixin):
             field = self.compute_of(image, mask, **bd_specs)
             yield LROEstimator.serialize_yrow(field)
 
-    def single_score(self, X, pred_y, true_y):
-        """ Computes the score on a single fingerprint. """
+    def single_error(self, X, pred_y, true_y):
+        """ Computes the error on a single fingerprint. """
         # Load predicted and ground truth fields
         field = LROEstimator.deserialize_yrow(pred_y)
         gfield = LROEstimator.deserialize_yrow(true_y)
@@ -114,13 +114,14 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         # Accumulate the average error
         avgerr = []
         for x, py, ty in zip(X, pred_y, y):
-            loc_avgerr = self.single_score(x, py, ty)
+            loc_avgerr = self.single_error(x, py, ty)
             # Append the results to avgerr accumulator
             avgerr.append(loc_avgerr)
         # Compute the mean average error, if possible
         if len(avgerr) > 0:
-            return -np.array(avgerr).mean()
+            return 1.0 - np.array(avgerr).mean() / self.max_error
         else:
+            print('Warning: score returned nan')
             return np.nan
 
     def train_on_data(self, X, y):
@@ -168,6 +169,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         raise NotImplementedError("Derived class must reimplement this method")
 
 class ScoreAngleDiffRMSD:
+    max_error = 90.0
     
     def compute_error(self, field1: Field, field2: Field, mask: Mask):
         """ Computes the RMSD of the angle differences between field1 and field2. """
@@ -175,8 +177,7 @@ class ScoreAngleDiffRMSD:
         diff = angle_diff(angle(field1, keepDims=False), angle(field2, keepDims=False))
         # Compute Root Mean Square Deviation (RMSD) on foreground mask
         diff = np.rad2deg(diff) ** 2
-        diff[np.logical_not(mask)] = 0.0
-        return np.sqrt(diff.sum() / np.count_nonzero(mask))
+        return np.sqrt( diff[mask].mean() )
 
 class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
     def __init__(self, ridge_dist: int = 10, number_angles: int = 36, along_sigma_ratio: float = 0.3, ortho_sigma: float = 0.05):
@@ -205,11 +206,12 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             border_y: vertical border (in pixels)
             step_x: horizontal distance between sample points (in pixels)
             step_y: vertical distance between sample points (in pixels)
+            onlyLRO (bool): whether to perform only the LRO estimation, or, conversely, also preprocessing and subsampling
         """
-        preprocessing = bd_specs.get('preprocessing', True)
-        if 'preprocessing' in bd_specs:
-            del bd_specs['preprocessing']
-        if preprocessing:
+        onlyLRO = bd_specs.get('onlyLRO', False)
+        if 'onlyLRO' in bd_specs:
+            del bd_specs['onlyLRO']
+        if not onlyLRO:
             image, _ = self.segmentor.segment(image.astype('uint8'))
             mask = convert_to_full(mask, **bd_specs)
         lro, rel = LRO(
@@ -219,7 +221,8 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             along_sigma_ratio=self.along_sigma_ratio,
             ortho_sigma=self.ortho_sigma)
         field = polar2cart(lro, rel, retField=True)
-        field = subsample(field, is_field=True, **bd_specs)
+        if not onlyLRO:
+            field = subsample(field, is_field=True, **bd_specs)
         return field
 
 class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
@@ -275,7 +278,7 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         pars = inspect.signature(AnGaFIS_OF_Estimator_Complete.__init__)
         image, _ = self.segmentor.segment(image.astype('uint8'))
         mask = convert_to_full(mask, **bd_specs)
-        field = self.lro_estimator.compute_of(image, mask, **bd_specs, preprocessing=False)
+        field = self.lro_estimator.compute_of(image, mask, **bd_specs, onlyLRO=True)
         field = reliable_iterative_smoothing(image, mask, field, 
             # Take some arguments from the lro_estimator
             LRO1__number_angles=self.lro_estimator.number_angles,
