@@ -16,10 +16,12 @@ def magnitude(*args, keepDims=True):
 	if keepDims: return magnitude
 	else: return magnitude.squeeze()
 
-def angle(*args, keepDims=True):
+def angle(*args, keepDims=True, unoriented=False):
 	""" Returns phase angle of input field """
 	x, y = _decode_args(*args)
 	angle = np.arctan2(y, x)
+	if unoriented:
+		angle = np.remainder(angle, np.pi)
 	if keepDims: return angle
 	else: return angle.squeeze()
 
