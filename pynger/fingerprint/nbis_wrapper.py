@@ -199,30 +199,3 @@ def nbis_bozorth3(left, right, **kwargs):
 	os.remove(left_min_path)
 	os.remove(right_min_path)
 	return left, right, score
-	
-	
-if __name__ == '__main__':
-	# from pynger.misc import vis_orient
-	# import matplotlib.pyplot as plt
-	# # Load the image
-	# path = "/Users/MacD/Downloads/oas/f0007_09.png"
-	# image = np.array(Image.open(path).convert('L'))
-	# # Compute the orientation field
-	# lro = nist_mkoas(image, mkoas_exe=os.path.join(os.path.dirname(__file__), 'mkoas_noreg_sd04'))
-	# # Compute the bounding box
-	# bb = nist_nfseg(image, mkoas_exe=os.path.join(os.path.dirname(__file__), 'nfseg'))
-	# # Cut the image at the bounding box
-	# x, y = (bb['x']-bb['w']//2, bb['y']-bb['h']//2)
-	# image = image[-y-bb['h']:-y, x:x+bb['w']]
-	# # Visualization
-	# plt.imshow(image)
-	# theta, strength = cart2polar(lro, keepDims=False)
-	# vis_orient(theta=theta/2, strength=strength, dest_shape=image.shape)
-	# plt.show()
-	
-	idx = range(1,9)
-	angle = nbis_idx2angle(idx, mode='pca')
-	new_idx = nbis_angle2idx(angle, mode='pca')
-	print(list(idx))
-	print(list(new_idx))
-	print((idx == new_idx).all())

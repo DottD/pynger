@@ -81,14 +81,3 @@ def angafis_preprocessing(image: Image, **kwargs):
     os.removedirs(outdir)
     return image
 
-
-if __name__ == '__main__':
-    path = "/Users/MacD/Documents/Databases/NISTSpecialDatabase4GrayScaleImagesofFIGS/sd04/png_txt/figs_0/f0003_10.png"
-    image = np.array(PIL.Image.open(path).convert('L'))
-    enhimage = angafis_preprocessing(image, verbose=True)
-    import matplotlib.pyplot as plt
-    plt.subplot(121)
-    plt.imshow(image)
-    plt.subplot(122)
-    plt.imshow(enhimage)
-    plt.show()

@@ -8,7 +8,8 @@ from pynger.types import Image, Mask, Field
 from pynger.fingerprint.tuning_lro import LROEstimator
 from pynger.fingerprint.sampling import convert_to_full
 from pynger.field.manipulation import polar2cart
-from pynger.misc import recursively_scan_dir_gen
+from pynger.misc import recursively_scan_dir_gen, recursively_scan_dir
+from itertools import combinations, starmap
 
 
 class Proxy:
@@ -220,3 +221,72 @@ def loadSegmentationDataset(sdir: str, odir: str):
                 '{}_{}.tif'.format(match[3], match[4]) # append the filename
                 )
             yield (ofile, sfile)
+
+def loadMatchingDatasetFVC(path: str):
+    """ Loads the FVC-TEST dataset.
+
+    Args:
+        path: Directory with the FVC-TEST dataset.
+
+    Return:
+        A generator of tuples (X, y, descr) where X has the pair of image filenames, y is the corresponding ground truth label, i.e. a 0 for reject or 1 for accept, descr contains a reference to the database and competition where the images in X belong.
+    """
+    _, index_files = recursively_scan_dir(path, '.MFA')
+    comp_pattern = re.compile('(FVC\\d+)')
+    
+    def _load_challenge(mfa, mfr):
+        " Load a challenge, given as a pair of index files "
+        out = []
+        for ifile, gt in zip([mfa, mfr], [1, 0]):
+            dir_ = os.path.dirname(ifile)
+            with open(ifile, 'r') as file_:
+                for line in file_:
+                    file1, file2 = line.split()
+                    path1 = os.path.join(dir_, db_name, file1)
+                    path2 = os.path.join(dir_, db_name, file2)
+                    out.append( ((path1, path2), gt) )
+        return out
+
+    out = []
+    for index in index_files:
+        # Get index for false matches
+        index2 = index[:-1]+'R'
+        # Retrieve competition
+        match = comp_pattern.search(index)
+        if match:
+            competition = match[1]
+        else:
+            competition = 'NULL'
+        # Retrieve database type (a or b)
+        db_type = index[-5].lower()
+        # Loop over the four possible databases
+        for db_n in range(1, 5):
+            db_name = 'Db{}_{}'.format(db_n, db_type)
+            out.append( ( _load_challenge(index, index2), (competition, db_n, db_type) ) )
+    return out
+
+def loadMatchingDatasetNIST(path: str):
+    """ Load NIST SD04 for matching.
+    
+    Args: 
+        path: Path to the folder containing the images.
+
+    Return:
+        A tuple (X, y, lenX) where X yields pairs of images, y generates 0 for a non-match and 1 for a match, lenX is the total number of elements.
+    """
+    # Load all images
+    _, filenames = recursively_scan_dir(path, ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'])
+    # Load images for each combination of filenames
+    load = lambda x: np.array(PIL.Image.open(x).convert('L'))
+    load2 = lambda x1, x2: tuple([load(x1), load(x2)])
+    X = starmap(load2, combinations(filenames,2))
+    # Compute length of X
+    lenX = int(scipy.special.binom(len(filenames), 2))
+    # Define function that returns ground truth from filename
+    is_match = lambda f1, f2: f1[0] != f2[0] and f1[1:] == f2[1:]
+    # Remove path from filenames
+    filenames = list(map(lambda x: os.path.splitext(os.path.basename(x))[0], filenames))
+    # Get ground truth from filenames
+    y = map(int, starmap(is_match, combinations(filenames,2)))
+
+    return X, y, lenX

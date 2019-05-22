@@ -211,9 +211,13 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         onlyLRO = bd_specs.get('onlyLRO', False)
         if 'onlyLRO' in bd_specs:
             del bd_specs['onlyLRO']
-        if not onlyLRO:
+        needComputeMask = mask is None
+        if not onlyLRO or needComputeMask:
             image, _ = self.segmentor.segment(image.astype('uint8'))
-            mask = convert_to_full(mask, **bd_specs)
+            if needComputeMask:
+                mask = _
+            else:
+                mask = convert_to_full(mask, **bd_specs)
         lro, rel = LRO(
             image, mask=mask, 
             ridge_dist=self.ridge_dist,
@@ -223,7 +227,10 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         field = polar2cart(lro, rel, retField=True)
         if not onlyLRO:
             field = subsample(field, is_field=True, **bd_specs)
-        return field
+        if needComputeMask:
+            return field, mask
+        else:
+            return field
 
 class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
     def __init__(self,
@@ -277,8 +284,12 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
         """ See documentation of super.compute_of """
         pars = inspect.signature(AnGaFIS_OF_Estimator_Complete.__init__)
         image, _ = self.segmentor.segment(image.astype('uint8'))
-        mask = convert_to_full(mask, **bd_specs)
-        field = self.lro_estimator.compute_of(image, mask, **bd_specs, onlyLRO=True)
+        needComputeMask = mask is None
+        if needComputeMask:
+            mask = _
+        else:
+            mask = convert_to_full(mask, **bd_specs)
+        field = self.lro_estimator.compute_of(image, mask, onlyLRO=True)
         field = reliable_iterative_smoothing(image, mask, field, 
             # Take some arguments from the lro_estimator
             LRO1_number_angles=self.lro_estimator.number_angles,
@@ -290,8 +301,11 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
             # Pass all the arguments of the initializer
             **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'}
         )
-        field = subsample(field, is_field=True, **bd_specs)
-        return field
+        if not needComputeMask:
+            field = subsample(field, is_field=True, **bd_specs)
+            return field
+        else:
+            return field, mask
 
 class DisabledCV:
     def __init__(self):
@@ -302,26 +316,3 @@ class DisabledCV:
 
     def get_n_splits(self, X, y, groups=None):
         return self.n_splits
-
-
-if __name__ == '__main__':
-    import PIL
-    import numpy as np
-    import time, datetime
-    filename1 = "/Users/MacD/Documents/Databases/temp/f0363_10.bmp"
-    # filename2 = "/Users/MacD/Documents/Databases/temp/s0363_10.bmp"
-    readimg = lambda ff: np.array(PIL.Image.open(ff).convert('L'))
-    left = readimg(filename1)
-    # right = readimg(filename2)
-    # X = [(left, right)]
-    # an_score = AnGaFISMatcher().match_scores(X)
-    # nb_score = NBISMatcher().match_scores(X)
-
-    # print(an_score, nb_score)
-    estimator = AnGaFIS_OF_Estimator_Complete()
-    X = [estimator.serialize_Xrow(left[:508, :508], np.ones((61, 61), dtype=bool), [14, 14, 8, 8])]
-    y = np.ones_like(left)
-    estimator.fit(X, y)
-    start = time.time()
-    estimator.predict(X)
-    print('Done in', datetime.timedelta(seconds=int(time.time()-start)))

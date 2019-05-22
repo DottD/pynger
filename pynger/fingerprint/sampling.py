@@ -71,11 +71,8 @@ def subsample(mat: Union[Image,Mask,Field], **kwargs) -> Union[Image,Mask,Field]
     if policy == 'fvc':
         sampling_fun = lambda M: _apply_blockwise(sampling_criterion, M, ri, rj, (sy, sx), 'center_coords')
     elif policy == 'nist':
-        if ri[-1] < mat.shape[0]-by:
-            ri = list(ri) + [mat.shape[0]-by-sy]
-        if rj[-1] < mat.shape[1]-bx:
-            rj = list(rj) + [mat.shape[1]-bx-sx]
-        sampling_fun = lambda M: _apply_blockwise(sampling_criterion, M, ri, rj, [], 'corner_coords')
+        sampling_fun = lambda M: _apply_blockwise(sampling_criterion, M, ri, rj, 
+            [(M.shape[0]-by-sy, M.shape[1]-bx-sx), (by, bx)], 'corner_coords')
     else:
         raise NotImplementedError('Policy not recognized')
         
@@ -111,9 +108,18 @@ def _apply_blockwise(fun, M, i, j, width, mode):
                 for ci in i
             ])
     elif mode == 'corner_coords':
+        lastI, lastJ = width[0]
+        by, bx = width[1]
+        sy, sx = i[-1]-i[-2], j[-1]-j[-2]
+        if i[-1] < M.shape[0]-by:
+            I1 = list(i[:-1]) + [lastI]
+            I2 = list(i[1:]) + [lastI+sy]
+        if j[-1] < M.shape[1]-bx:
+            J1 = list(j[:-1]) + [lastJ]
+            J2 = list(j[1:]) + [lastJ+sx]
         return np.array([
-                [fun(M[t:b, l:r]) for l, r in zip(j[:-1], j[1:])]
-                for t, b in zip(i[:-1],i[1:])
+                [fun(M[t:b, l:r]) for l, r in zip(J1,J2)]
+                for t, b in zip(I1,I2)
             ])
     else:
         raise NotImplementedError('Mode not recognized')
