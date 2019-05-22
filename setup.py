@@ -55,7 +55,7 @@ def find_libs(root: str, libs: dict):
 
 def find_all_libs(root: str):
 	def get_all_static_libs_in_path(path):
-		lib_patt = re.compile('lib(\\w+)\\.(?:lib|a)')
+		lib_patt = re.compile('(?:lib)?(\\w+)\\.(?:lib|a)')
 		for dir, _, files in os.walk(path):
 			matches = filter(None, map(lib_patt.match, files))
 			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
