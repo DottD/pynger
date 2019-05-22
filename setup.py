@@ -101,13 +101,23 @@ if sys.platform.startswith('linux'):
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 print('OpenCV extra_objects:', extra_objects)
 # As the linking order matters, put the corelib at the end and the adelib right before
-cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
-cv_adelib = [lib for lib in extra_objects if 'libade' in lib][0]
-cv_zlib = [lib for lib in extra_objects if 'libz' in lib][0]
-cv_corelib_idx = extra_objects.index(cv_corelib)
-cv_adelib_idx = extra_objects.index(cv_adelib)
-cv_zlib_idx = extra_objects.index(cv_zlib)
-indices = [cv_adelib_idx, cv_corelib_idx, cv_zlib_idx]
+indices = []
+### ADE
+cv_adelib = [lib for lib in extra_objects if 'libade' in lib]
+if len(cv_adelib) > 0:
+	cv_adelib_idx = extra_objects.index(cv_adelib[0])
+	indices += [cv_adelib_idx]
+### CORE
+cv_corelib = [lib for lib in extra_objects if 'core' in lib]
+if len(cv_corelib) > 0:
+	cv_corelib_idx = extra_objects.index(cv_corelib[0])
+	indices += [cv_corelib_idx]
+### LIBZ
+cv_zlib = [lib for lib in extra_objects if 'libz' in lib]
+if len(cv_zlib) > 0:
+	cv_zlib_idx = extra_objects.index(cv_zlib[0])
+	indices += [cv_zlib_idx]
+### Reorder
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
 # LAPACK
