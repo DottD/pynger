@@ -99,6 +99,7 @@ ang_seg_link_args = ['-fPIC']
 if sys.platform.startswith('linux'):
 	ang_seg_link_args += ['-Wl,--verbose']
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
+print('OpenCV extra_objects:', extra_objects)
 # As the linking order matters, put the corelib at the end and the adelib right before
 cv_corelib = [lib for lib in extra_objects if 'core' in lib][0]
 cv_adelib = [lib for lib in extra_objects if 'libade' in lib][0]
