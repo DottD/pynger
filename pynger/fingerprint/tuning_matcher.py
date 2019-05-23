@@ -1,17 +1,12 @@
-import pickle
-import time
-import datetime
 import os
 
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 
 from pynger.config import __NBIS_LIB__
-from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart, magnitude
-from pynger.fingerprint.sampling import convert_to_full, subsample
-from pynger.fingerprint.orientation import LRO
-from pynger.fingerprint.refinement import reliable_iterative_smoothing
-from pynger.types import Field, Image, List, Mask, Union
+from pynger.field.manipulation import angle, polar2cart
+from pynger.fingerprint.sampling import subsample
+from pynger.types import Field, Image, Mask
 from pynger.fingerprint.nbis import mindtct
 from pynger.fingerprint.nbis import compute_lro as nbis_lro
 from pynger.fingerprint.nbis_wrapper import nbis_angle2idx, nbis_idx2angle, nbis_bozorth3

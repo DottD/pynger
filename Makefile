@@ -1,9 +1,12 @@
-.PHONY: install clean uninstall rebuild doc undoc
+.PHONY: install install-small clean uninstall rebuild doc undoc
 
 current_dir := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 install:
 	python3 setup.py --path ${LIBDIR} build_ext install
+
+reduce-dim:
+	rm pynger/misc.py pynger/ipython.py pynger/fingerprint/sfinge.py pynger/fingerprint/cmaes.py pynger/fingerprint/tuning_matcher.py pynger/fingerprint/nbis_wrapper.py
 	
 dev:
 	python3 setup.py build_ext --inplace develop

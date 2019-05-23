@@ -1,22 +1,16 @@
 import pickle
-import time
-import datetime
 import itertools
 import inspect
 
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+from sklearn.base import BaseEstimator, RegressorMixin
 
-from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart, halve_angle, double_angle
+from pynger.field.manipulation import angle, angle_diff, polar2cart
 from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.fingerprint.orientation import LRO
 from pynger.fingerprint.refinement import reliable_iterative_smoothing
-from pynger.types import Field, Image, List, Mask, Union
-from pynger.fingerprint.nbis import compute_lro as nbis_lro
-from pynger.fingerprint.nbis_wrapper import nbis_angle2idx, nbis_idx2angle, nbis_bozorth3
+from pynger.types import Field, Image, List, Mask
 from pynger.fingerprint.tuning_segmentation import AnGaFIS_Seg_Estimator
-
-from joblib import Parallel, delayed
 
 
 class LROEstimator(BaseEstimator, RegressorMixin):
