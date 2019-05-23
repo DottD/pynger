@@ -49,7 +49,8 @@ class FingerprintMatcher(BaseEstimator, ClassifierMixin):
         else:
             verbosity = 0
 
-        left, right = Parallel(verbose=verbosity)(delayed(get_min_lists)(X_line) for X_line in X)
+        results = Parallel(verbose=verbosity)(delayed(get_min_lists)(X_line) for X_line in X)
+        left, right = zip(*results)
 
         # Compute the match scores
         scores = nbis_bozorth3(left, right, verbose=False, bozorth3_exe=os.path.join(__NBIS_LIB__, 'bin', 'bozorth3'))

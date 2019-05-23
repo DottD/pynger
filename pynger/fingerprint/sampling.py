@@ -111,12 +111,16 @@ def _apply_blockwise(fun, M, i, j, width, mode):
         lastI, lastJ = width[0]
         by, bx = width[1]
         sy, sx = i[-1]-i[-2], j[-1]-j[-2]
+        I1 = list(i[:-1])
+        I2 = list(i[1:])
+        J1 = list(j[:-1])
+        J2 = list(j[1:])
         if i[-1] < M.shape[0]-by:
-            I1 = list(i[:-1]) + [lastI]
-            I2 = list(i[1:]) + [lastI+sy]
+            I1 += [lastI]
+            I2 += [lastI+sy]
         if j[-1] < M.shape[1]-bx:
-            J1 = list(j[:-1]) + [lastJ]
-            J2 = list(j[1:]) + [lastJ+sx]
+            J1 += [lastJ]
+            J2 += [lastJ+sx]
         return np.array([
                 [fun(M[t:b, l:r]) for l, r in zip(J1,J2)]
                 for t, b in zip(I1,I2)

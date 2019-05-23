@@ -183,19 +183,20 @@ def nbis_bozorth3(left, right, **kwargs):
 			for M, name in zip([L, R], ['left', 'right']):
 				# Create minutiae file
 				min_path = os.path.join(currdir, '{}-{}-{}.xyt'.format(name, id(L), id(R)))
-				M = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in left])
+				M = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in L])
 				M[:,2] = np.round(np.rad2deg(nbis_idx2angle(M[:,2], N=16)))
 				M[:,3] = np.round(M[:,3] * 100.0)
 				M = M.astype(int)
 				M = M[M[:,3] > np.percentile(M[:,3], 5), :]
 				pd.DataFrame(M).to_csv(min_path, **to_csv_options)
 				# Append path of such a file to a file with the list of mates
-				mfile.write(min_path)
+				mfile.write(min_path+'\n')
 				# Append minutiae list
-				if name == 'left':
-					Lout.append(M)
-				else:
-					Rout.append(M)
+				if verbose:
+					if name == 'left':
+						Lout.append(M)
+					else:
+						Rout.append(M)
 	# Run matcher
 	command = "{} -M \"{}\"".format(exe_path, mates_file)
 	with Popen(command, cwd=currdir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
@@ -203,14 +204,15 @@ def nbis_bozorth3(left, right, **kwargs):
 		if err != "":
 			raise RuntimeError(err)
 		# Read the list of scores
-		scores = [int(k) for k in proc.stdout.read()]
+		# Splits on newlines and remove empty strings
+		scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
 		# score = int(proc.stdout.read())
 		if verbose:
 			print("Score", score)
 	# Remove all files listed in mates_file
 	with open(mates_file, 'r') as mfile:
 		for path in mfile:
-			os.remove(path)
+			os.remove(path.rstrip())
 	os.remove(mates_file)
 	if verbose:
 		return left, right, scores
