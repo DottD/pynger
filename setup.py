@@ -99,8 +99,11 @@ pani_ext = Extension(
 	)
 
 # OpenCV 
-ang_seg_args = ['-std=gnu++14', '-Wextra']
-ang_seg_link_args = ['-fPIC']
+ang_seg_args = []
+ang_seg_link_args = []
+if sys.platform != 'win32':
+	ang_seg_args += ['-std=gnu++14', '-Wextra']
+	ang_seg_link_args += ['-fPIC']
 if sys.platform.startswith('linux'):
 	ang_seg_link_args += ['-Wl,--verbose']
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
@@ -150,7 +153,7 @@ ang_seg_ext = Extension(
 	include_dirs=[
 		np.get_include(),
 		os.path.join(armadir, 'include'),
-		os.path.join(cvdir, 'include/opencv4'),
+		os.path.join(cvdir, 'include' if sys.platform == 'win32' else 'include/opencv4'),
 		],
 	extra_compile_args=ang_seg_args,
 	extra_link_args=ang_seg_link_args,
@@ -162,6 +165,9 @@ with open("README.md", "r") as fh:
 	long_description = fh.read()
 
 # Install the package
+ext_modules = [pani_ext, ang_seg_ext]
+if sys.platform != 'win32':
+	ext_modules += [nbis_ext]
 setup(
 	name="pynger-DottD",
 	version="0.0.1",
@@ -177,5 +183,5 @@ setup(
 		"License :: OSI Approved :: MIT License",
 		"Operating System :: OS Independent",
 	],
-	ext_modules=[nbis_ext, pani_ext, ang_seg_ext]
+	ext_modules=ext_modules
 )
