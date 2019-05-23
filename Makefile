@@ -6,7 +6,7 @@ install:
 	python3 setup.py --path ${LIBDIR} build_ext install
 
 reduce-dim:
-	rm pynger/misc.py pynger/ipython.py pynger/fingerprint/sfinge.py pynger/fingerprint/cmaes.py pynger/fingerprint/tuning_matcher.py pynger/fingerprint/nbis_wrapper.py pynger/fingerprint/tuning_nbis_segmentation.py
+	rm pynger/field/visualization.py pynger/ipython.py pynger/fingerprint/sfinge.py pynger/fingerprint/cmaes.py pynger/fingerprint/tuning_matcher.py pynger/fingerprint/nbis_wrapper.py pynger/fingerprint/tuning_nbis_segmentation.py
 	
 dev:
 	python3 setup.py build_ext --inplace develop
