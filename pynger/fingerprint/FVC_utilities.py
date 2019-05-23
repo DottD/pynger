@@ -65,7 +65,7 @@ class MaskProxy(Proxy):
 class FieldProxy(Proxy):
     def __init__(self, *args):
         if len(args) == 2 and isinstance(args[0], np.ndarray) and isinstance(args[1], np.ndarray):
-            self.angle, self.mask = args[0], args[1]
+            self.angle, self.mask = args[0].copy(), args[1].copy()
         elif len(args) == 1 and isinstance(args[0], str):
             self.read(args[0])
         else:
@@ -88,10 +88,10 @@ class FieldProxy(Proxy):
             f.read(8)
             # Read the field specifications
             get_next_int = lambda: int.from_bytes(f.read(4), byteorder='little', signed=True)
-            border_x = get_next_int()
-            border_y = get_next_int()
-            step_x = get_next_int()
-            step_y = get_next_int()
+            self.border_x = get_next_int()
+            self.border_y = get_next_int()
+            self.step_x = get_next_int()
+            self.step_y = get_next_int()
             cols = get_next_int()
             rows = get_next_int()
             # Read the values
@@ -103,8 +103,8 @@ class FieldProxy(Proxy):
             mask = np.array(mask, dtype=bool).reshape((rows, cols))
             # Optionally convert to full matrix
             if full:
-                self.angle = convert_to_full(angle, border_x=border_x, border_y=border_y, step_x=step_x, step_y=step_y, mode='constant')
-                self.mask = convert_to_full(mask, border_x=border_x, border_y=border_y, step_x=step_x, step_y=step_y, mode='constant')
+                self.angle = convert_to_full(angle, border_x=self.border_x, border_y=self.border_y, step_x=self.step_x, step_y=self.step_y, mode='constant')
+                self.mask = convert_to_full(mask, border_x=self.border_x, border_y=self.border_y, step_x=self.step_x, step_y=self.step_y, mode='constant')
             else:
                 self.angle = angle
                 self.mask = mask
