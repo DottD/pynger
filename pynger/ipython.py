@@ -1,7 +1,7 @@
 import PIL
 import matplotlib.pyplot as plt
 import numpy as np
-from pynger.misc import vis_orient, vis_stream_orient
+from pynger.field.visualization import vis_orient, vis_stream_orient
 from pynger.field.manipulation import _decode_args, cart2polar, magnitude
 from pynger.image.manipulation import scale_to_range
 
@@ -40,7 +40,7 @@ def plot_vector_field(image, *args, **kwargs):
 	Args:
 		image: The vector field will be drawn over this image. Either a PIL.Image or a numpy.array with proper shape and dtype (see PIL documentation).
 		args: List of vector fields to be plotted, either as two lists with the x and y components respectively, or as list of fields ((n,m,2)-shaped arrays). If the keyword argument `polar` is set to True, the function expects the field components to be polar.
-		kwargs: See pynger.misc.vis_orient for all the possible key-value pairs. 
+		kwargs: See pynger.field.visualization.vis_orient for all the possible key-value pairs. 
 		
 	Returns:
 		A PIL.Image.Image showing the input image with each specified field overlaid.
@@ -54,7 +54,7 @@ def stream_vector_field(image, *args, **kwargs):
 	Args:
 		image: The vector field will be drawn over this image. Either a PIL.Image or a numpy.array with proper shape and dtype (see PIL documentation).
 		args: List of vector fields to be plotted, either as two lists with the x and y components respectively, or as list of fields ((n,m,2)-shaped arrays). If the keyword argument `polar` is set to True, the function expects the field components to be polar.
-		kwargs: See pynger.misc.vis_orient for all the possible key-value pairs. 
+		kwargs: See pynger.field.visualization.vis_orient for all the possible key-value pairs. 
 		
 	Returns:
 		A PIL.Image.Image showing the input image with each specified field overlaid.

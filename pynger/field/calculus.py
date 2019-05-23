@@ -61,18 +61,3 @@ def irot_2d(field):
 	fx, fy = np.dsplit(field, 2)
 	return np.dstack((fy, -fx))
 	
-if '__main__' == __name__:
-	
-	field = np.random.random((1000,1000, 2))
-	test1 = lambda: rot_2d(field)
-	test2 = lambda: rot_2d_2(field)
-	
-	from pynger.misc import testTime
-	testTime(test1, rep=30, msg="con spacchettamento {} secondi")
-	testTime(test2, rep=30, msg="numpy diretto {} secondi")
-	
-	from memory_profiler import memory_usage, profile
-	out1 = memory_usage(profile(test1))
-	print(out1)
-	out2 = memory_usage(profile(test2))
-	print(out2)
