@@ -9,7 +9,6 @@ from scipy.ndimage.morphology import distance_transform_cdt
 
 from pynger.types import Field, Image, List, Mask, Union, Tuple
 from pynger.fingerprint.cangafris import segment_enhance
-from pynger.fingerprint.nbis import segment
 
 
 class SegmentationEstimator(BaseEstimator, ClassifierMixin):
@@ -192,32 +191,3 @@ class AnGaFIS_Seg_Estimator(ScoreBaddeleyDissimilarity, SegmentationEstimator):
             print("Error in segmentation:", err)
             ret = (image, np.ones_like(image, dtype=bool))
         return ret
-
-class NBIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
-    def __init__(self,
-        # fac_n: int = 5,
-        # min_fg: int = 2000,
-        # max_fg: int = 8000,
-        # nerode: int = 3,
-        # rsblobs: int = 1,
-        # fill: int = 1,
-        # min_n: int = 25,
-        # hist_thresh: int = 20,
-        # origras_wmax: int = 2000,
-        # origras_hmax: int = 2000,
-        # fac_min: float = 0.75,
-        # fac_del: float = 0.05,
-        # slope_thresh: float = 0.90,
-    ):
-        """ Initializes and stores all the algorithm's parameters """
-        pars = inspect.signature(NBIS_Seg_Estimator.__init__)
-        for par in pars.parameters.keys():
-            if par != 'self':
-                setattr(self, par, eval(par))
-
-    def segment(self, image):
-        """ Segments the input fingerprint image """
-        pars = inspect.signature(NBIS_Seg_Estimator.__init__)
-        return segment(image,)
-        #     **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'},
-        # )
