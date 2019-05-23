@@ -221,21 +221,3 @@ class NBIS_Seg_Estimator(ScoreOverlapMeasure, SegmentationEstimator):
         return segment(image,)
         #     **{par:eval('self.{}'.format(par), {'self':self}) for par in pars.parameters.keys() if par != 'self'},
         # )
-
-if __name__ == '__main__':
-    import PIL
-    import numpy as np
-    from pynger.misc import testTime
-    from pynger.fingerprint.segmentation import rough_segmentation
-    path1 = "/Users/MacD/Documents/Databases/NFIQ/NIST_SD04/1/f0057_02.bmp"
-    path2 = "/Users/MacD/Documents/Databases/NFIQ/NIST_SD04/1/f0014_06.bmp"
-    image1 = np.array(PIL.Image.open(path1).convert('L'))
-    image2 = np.array(PIL.Image.open(path2).convert('L'))
-    estimator1 = AnGaFIS_Seg_Estimator()
-    # estimator2 = NBIS_Seg_Estimator()
-    X = [image1, image2]
-    y1 = testTime(lambda:list(estimator1.predict(X)), rep=1, msg='AnGaFIS_Seg_Estimator took {} s')
-    y2 = [rough_segmentation(x, crop=False)[1] for x in X]
-    # y2 = testTime(lambda:list(estimator2.predict(X)), rep=1, msg='NBIS_Seg_Estimator took {} s')
-    print('Balanced Accuracy:', estimator1.score(X, y2))
-    print('Overlap Measure:', ScoreOverlapMeasure().compute_error(y1[0], y2[0]))

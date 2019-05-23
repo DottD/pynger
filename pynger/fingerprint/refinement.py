@@ -289,16 +289,3 @@ def iterative_smoothing(field: Field, mask: Mask, period: float, **kwargs) -> Fi
         step += 1
 
     return _field
-
-
-if __name__ == '__main__':
-    import PIL
-    from pynger.fingerprint.segmentation import rough_segmentation
-    path = "/Users/MacD/Documents/Unicam/Dottorato/pytest/test_images/f0001_01.bmp"
-    image = np.array(PIL.Image.open(path).convert('L'))
-    image, mask = rough_segmentation(image)
-    lro, _ = LRO(image)
-    field = polar2cart(lro, 1, retField=True)
-    x = np.random.randn(44)
-    args = dict(zip(_get_all_kwargs(reliable_iterative_smoothing).keys(), x))
-    field2 = reliable_iterative_smoothing(image, mask, field, **args)

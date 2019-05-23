@@ -1,10 +1,12 @@
 import pickle
 import time
 import datetime
+import os
 
 import numpy as np
 from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
 
+from pynger.config import __NBIS_LIB__
 from pynger.field.manipulation import angle, angle_diff, cart2polar, polar2cart, magnitude
 from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.fingerprint.orientation import LRO
@@ -41,7 +43,7 @@ class FingerprintMatcher(BaseEstimator, ClassifierMixin):
             minutiae_r = mindtct(image_r, fun, contrast_boost=True)[-1]
 
             # Compute the match score
-            minutiae_l, minutiae_r, score = nbis_bozorth3(minutiae_l, minutiae_r, verbose=True, bozorth3_exe='/Users/MacD/Documents/Libraries/fp-libs/nbis-install/bin/bozorth3')
+            minutiae_l, minutiae_r, score = nbis_bozorth3(minutiae_l, minutiae_r, verbose=True, bozorth3_exe=os.path.join(__NBIS_LIB__, 'bin', 'bozorth3'))
 
             return score
 

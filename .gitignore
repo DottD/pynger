@@ -6,3 +6,4 @@ build
 *.so
 dist
 joblib_cache
+pynger/config.py
