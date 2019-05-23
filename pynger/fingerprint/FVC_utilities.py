@@ -6,7 +6,7 @@ import PIL.Image
 import typing
 from pynger.types import Image, Mask, Field
 from pynger.fingerprint.tuning_lro import LROEstimator
-from pynger.fingerprint.sampling import convert_to_full
+from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.field.manipulation import polar2cart
 from pynger.misc import recursively_scan_dir_gen, recursively_scan_dir
 from itertools import combinations, starmap
@@ -131,8 +131,10 @@ class FieldProxy(Proxy):
         sx = kwargs.get('step_x', 8)
         sy = kwargs.get('step_y', 8)
         # Sample the field
-        angle = self.angle[by:-by:sy, bx:-bx:sx]
-        mask = self.mask[by:-by:sy, bx:-bx:sx]
+        if self.angle.shape != self.mask.shape:
+            raise RuntimeError('angle and mask sizes mismatch')
+        angle = subsample(self.angle, is_field=False, smooth=False, **kwargs)
+        mask = subsample(self.mask, is_field=False, smooth=False, **kwargs)
         with open(path, 'wb') as f:
             f.write("DIRIMG00".encode('ascii'))
             # Read the field specifications
@@ -144,8 +146,12 @@ class FieldProxy(Proxy):
             rows, cols = angle.shape
             put_int(cols)
             put_int(rows)
-            # Write the values
+            # Values conversion
             angle *= 255.0 / np.pi
+            angle = angle.astype(int)
+            mask = mask.astype(int)
+            mask *= int(255 / mask.max())
+            # Write the values
             put_uint8 = lambda n: f.write(int(n).to_bytes(1, byteorder='little', signed=False))
             for a, m in zip(angle.ravel(), mask.ravel()):
                 put_uint8(a)
