@@ -32,7 +32,7 @@ class FingerprintMatcher(BaseEstimator, ClassifierMixin):
         # Create a function with fixed paramters
         fun = lambda img, blkoffs, num_dir: self.compute_lro(img, blkoffs, num_dir, self.params) 
 
-        def get_score(X_line):
+        def get_min_lists(X_line):
             # Get the images
             image_l, image_r = X_line
 
@@ -42,17 +42,17 @@ class FingerprintMatcher(BaseEstimator, ClassifierMixin):
             # Compute minutiae of the second image
             minutiae_r = mindtct(image_r, fun, contrast_boost=True)[-1]
 
-            # Compute the match score
-            minutiae_l, minutiae_r, score = nbis_bozorth3(minutiae_l, minutiae_r, verbose=True, bozorth3_exe=os.path.join(__NBIS_LIB__, 'bin', 'bozorth3'))
-
-            return score
+            return minutiae_l, minutiae_r
 
         if hasattr(self, 'verbose') and self.verbose:
             verbosity = 10
         else:
             verbosity = 0
 
-        scores = Parallel(verbose=verbosity)(delayed(get_score)(X_line) for X_line in X)
+        left, right = Parallel(verbose=verbosity)(delayed(get_min_lists)(X_line) for X_line in X)
+
+        # Compute the match scores
+        scores = nbis_bozorth3(left, right, verbose=False, bozorth3_exe=os.path.join(__NBIS_LIB__, 'bin', 'bozorth3'))
         
         return scores
 

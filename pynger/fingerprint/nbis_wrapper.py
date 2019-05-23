@@ -161,41 +161,58 @@ def nbis_bozorth3(left, right, **kwargs):
 	""" Run the NBIS Bozorth3 matcher on the two input sets of minutiae.
 
 	Args:
-		left (minutiae list): First list of minutiae
-		right (minutiae list): Second list of minutiae
+		left (minutiae list): First list of list of minutiae
+		right (minutiae list): Second list of list of minutiae
 
     Keyword Args:
-        verbose (bool): Whether some information should be returned in stdout (defaults to False)
+        verbose (bool): Whether some information should be returned in stdout, and list of actually-used minutiae shall be returned as the function's output (defaults to False)
 				bozorth3_exe (str): Path to the bozorth3 executable
 	"""
+	verbose = kwargs.get('verbose', False)
 	# Get the full path to the executable
 	exe_path = os.path.join(os.path.dirname(__file__), 'bozorth3')
 	exe_path = kwargs.get('bozorth3_exe', exe_path)
 	# Save minutiae information to the current directory
 	currdir = str(Path.home())
-	left_min_path = os.path.join(currdir, 'left-{}-{}.xyt'.format(id(left), id(right)))
-	left = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in left])
-	left[:,2] = np.round(np.rad2deg(nbis_idx2angle(left[:,2], N=16)))
-	left[:,3] = np.round(left[:,3] * 100.0)
-	left = left.astype(int)
-	left = left[left[:,3] > np.percentile(left[:,3], 5), :]
 	to_csv_options = {'sep': ' ', 'header': False, 'index': False}
-	pd.DataFrame(left).to_csv(left_min_path, **to_csv_options)
-	right_min_path = os.path.join(currdir, 'right-{}-{}.xyt'.format(id(left), id(right)))
-	right = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in right])
-	right[:,2] = np.round(np.rad2deg(nbis_idx2angle(right[:,2], N=16)))
-	right[:,3] = np.round(right[:,3] * 100.0)
-	right = right.astype(int)
-	right = right[right[:,3] > np.percentile(right[:,3], 5), :]
-	pd.DataFrame(right).to_csv(right_min_path, **to_csv_options)
+	mates_file = os.path.join(currdir, 'mates-{}-{}.lis'.format(id(left), id(right)))
+	if verbose:
+		Lout, Rout = [], []
+	with open(mates_file, 'w') as mfile:
+		for L, R in zip(left, right):
+			for M, name in zip([L, R], ['left', 'right']):
+				# Create minutiae file
+				min_path = os.path.join(currdir, '{}-{}-{}.xyt'.format(name, id(L), id(R)))
+				M = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in left])
+				M[:,2] = np.round(np.rad2deg(nbis_idx2angle(M[:,2], N=16)))
+				M[:,3] = np.round(M[:,3] * 100.0)
+				M = M.astype(int)
+				M = M[M[:,3] > np.percentile(M[:,3], 5), :]
+				pd.DataFrame(M).to_csv(min_path, **to_csv_options)
+				# Append path of such a file to a file with the list of mates
+				mfile.write(min_path)
+				# Append minutiae list
+				if name == 'left':
+					Lout.append(M)
+				else:
+					Rout.append(M)
 	# Run matcher
-	command = "{} \"{}\" \"{}\"".format(exe_path, left_min_path, right_min_path)
+	command = "{} -M \"{}\"".format(exe_path, mates_file)
 	with Popen(command, cwd=currdir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
 		err = proc.stderr.read()
 		if err != "":
 			raise RuntimeError(err)
-		if kwargs.get('verbose', False):
-			score = int(proc.stdout.read())
-	os.remove(left_min_path)
-	os.remove(right_min_path)
-	return left, right, score
+		# Read the list of scores
+		scores = [int(k) for k in proc.stdout.read()]
+		# score = int(proc.stdout.read())
+		if verbose:
+			print("Score", score)
+	# Remove all files listed in mates_file
+	with open(mates_file, 'r') as mfile:
+		for path in mfile:
+			os.remove(path)
+	os.remove(mates_file)
+	if verbose:
+		return left, right, scores
+	else:
+		return scores
