@@ -82,7 +82,7 @@ typedef struct {
 	double maxcp2;
 } _ImageEqualize;
 
-char* segmentation(unsigned char* data, const long* dim,
+char* segmentation(unsigned char* data, const intptr_t* dim,
 	const _ImageBimodalize ImageBimodalize,
 	const _ImageCroppingSimple ImageCroppingSimple,
 	const _TopMask TopMask,

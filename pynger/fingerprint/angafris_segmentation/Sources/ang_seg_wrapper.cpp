@@ -1,7 +1,7 @@
 #include "../Headers/ang_seg_wrapper.hpp"
 
 
-char* segmentation(unsigned char* data, const long* dim,
+char* segmentation(unsigned char* data, const intptr_t* dim,
 	const _ImageBimodalize ImageBimodalize,
 	const _ImageCroppingSimple ImageCroppingSimple,
 	const _TopMask TopMask,

@@ -238,11 +238,7 @@ static PyObject* sgmnt_enh(PyObject *self, PyObject *args, PyObject *kwargs)
 	fg_mask_data = (unsigned char*)PyArray_DATA( (PyArrayObject*)fg_mask );
 	
 	// Segment the image
-#ifdef _WIN32
-	char* seg_error = segmentation(data, (long*)dim, ImageBimodalize, ImageCroppingSimple, TopMask, ImageSignificantMask, ImageEqualize, enh_img_data, fg_mask_data, enhance_only);
-#else
 	char* seg_error = segmentation(data, dim, ImageBimodalize, ImageCroppingSimple, TopMask, ImageSignificantMask, ImageEqualize, enh_img_data, fg_mask_data, enhance_only);
-#endif
 	if (seg_error != NULL) {
 		PyErr_SetString(PyExc_RuntimeError, seg_error);
 		return NULL;
