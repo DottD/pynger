@@ -134,10 +134,9 @@ class FieldProxy(Proxy):
         angle = self.angle[by:-by:sy, bx:-bx:sx]
         mask = self.mask[by:-by:sy, bx:-bx:sx]
         with open(path, 'wb') as f:
-            # Read and discard the header. To visualize -> print(f.read(8).decode('ascii'))
             f.write("DIRIMG00".encode('ascii'))
             # Read the field specifications
-            put_int = lambda n: int(n).to_bytes(4, byteorder='little', signed=True)
+            put_int = lambda n: f.write(int(n).to_bytes(4, byteorder='little', signed=True))
             put_int(bx)
             put_int(by)
             put_int(sx)
@@ -147,8 +146,8 @@ class FieldProxy(Proxy):
             put_int(rows)
             # Write the values
             angle *= 255.0 / np.pi
-            put_uint8 = lambda n: int(n).to_bytes(1, byteorder='little', signed=False)
-            for a, m in zip(angle.flatten(), mask.flatten()):
+            put_uint8 = lambda n: f.write(int(n).to_bytes(1, byteorder='little', signed=False))
+            for a, m in zip(angle.ravel(), mask.ravel()):
                 put_uint8(a)
                 put_uint8(m)
 
