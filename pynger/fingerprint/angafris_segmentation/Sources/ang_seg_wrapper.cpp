@@ -104,10 +104,10 @@ char* segmentation(unsigned char* data, const long* dim,
 		memcpy(fg_mask_data, mask.data, sizeof(unsigned char)*dim[0]*dim[1]);
 	} catch(const std::exception& ex) {
 		msg = (char*)malloc(sizeof(char)*300);
-		sprintf(msg, "Exception catched while processing the input image: %s\n", ex.what());
+		sprintf(msg, "Exception caught while processing the input image: %s\n", ex.what());
 	} catch(...) {
 		msg = (char*)malloc(sizeof(char)*300);
-		sprintf(msg, "Generic exception catched while processing the input image\n");
+		sprintf(msg, "Generic exception caught while processing the input image\n");
 	}
 
 	return msg;
