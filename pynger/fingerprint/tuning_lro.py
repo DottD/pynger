@@ -202,9 +202,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             step_y: vertical distance between sample points (in pixels)
             onlyLRO (bool): whether to perform only the LRO estimation, or, conversely, also preprocessing and subsampling
         """
-        onlyLRO = bd_specs.get('onlyLRO', False)
-        if 'onlyLRO' in bd_specs:
-            del bd_specs['onlyLRO']
+        onlyLRO = bd_specs.pop('onlyLRO', False)
         needComputeMask = mask is None
         if not onlyLRO or needComputeMask:
             image, _ = self.segmentor.segment(image.astype('uint8'))
@@ -212,6 +210,9 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
                 mask = _
             else:
                 mask = convert_to_full(mask, **bd_specs)
+        # Ensure that the image has the same shape of the mask (generally smaller)
+        image = image[:mask.shape[0], :mask.shape[1]]
+        # Compute the LRO and convert it to field
         lro, rel = LRO(
             image, mask=mask, 
             ridge_dist=self.ridge_dist,
@@ -219,6 +220,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             along_sigma_ratio=self.along_sigma_ratio,
             ortho_sigma=self.ortho_sigma)
         field = polar2cart(lro, rel, retField=True)
+        # Eventually downsample the field
         if not onlyLRO:
             field = subsample(field, is_field=True, **bd_specs)
         if needComputeMask:
