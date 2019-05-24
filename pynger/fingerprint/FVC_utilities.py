@@ -121,6 +121,7 @@ class FieldProxy(Proxy):
             border_y (int): Vertical border used to sample the field (defaults to 14)
             step_x (int): Horizontal distance between two conscutive sample points (defaults to 8)
             step_y (int): Vertical distance between two conscutive sample points (defaults to 8)
+            subsample (bool): Whether the input shall be sub-sampled before saving it
 
         Note:
             The field is subsampled in the process. To avoid this behaviour, set border parameters to 0 and step parameters to 1.
@@ -130,11 +131,16 @@ class FieldProxy(Proxy):
         by = kwargs.get('border_y', 14)
         sx = kwargs.get('step_x', 8)
         sy = kwargs.get('step_y', 8)
+        needSubsample = kwargs.pop('subsample', True)
         # Sample the field
         if self.angle.shape != self.mask.shape:
             raise RuntimeError('angle and mask sizes mismatch')
-        angle = subsample(self.angle, is_field=False, smooth=False, **kwargs)
-        mask = subsample(self.mask, is_field=False, smooth=False, **kwargs)
+        if needSubsample:
+            angle = subsample(self.angle, is_field=False, smooth=False, **kwargs)
+            mask = subsample(self.mask, is_field=False, smooth=False, **kwargs)
+        else:
+            angle = self.angle
+            mask = self.mask
         with open(path, 'wb') as f:
             f.write("DIRIMG00".encode('ascii'))
             # Read the field specifications
