@@ -11,7 +11,7 @@ def plot_minutiae(minutiae):
         minutiae: Structure as the output of mindtct.
     """
     M = minutiae_selection(minutiae)
-    x, y, theta, quality = *M.T
+    x, y, theta, quality = M.T
     clim = (np.min(quality), np.max(quality))
     theta = np.deg2rad(theta)
     plt.quiver(x, y, np.cos(theta), np.sin(theta), quality, **{
