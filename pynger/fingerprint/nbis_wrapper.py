@@ -157,6 +157,16 @@ def nbis_angle2idx(theta, N=8, mode='mindtct'):
 		idx += 1 # convert to 1, ..., N
 	return idx.astype(int)
 
+def minutiae_selection(minutiae):
+	""" Selects the subset of most reliable minutiae.
+	"""
+	M = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in minutiae])
+	M[:,2] = np.round(np.rad2deg(nbis_idx2angle(M[:,2], N=16)))
+	M[:,3] = np.round(M[:,3] * 100.0)
+	M = M.astype(int)
+	M = M[M[:,3] > np.percentile(M[:,3], 5), :]
+	return M
+
 def nbis_bozorth3(left, right, **kwargs):
 	""" Run the NBIS Bozorth3 matcher on the two input sets of minutiae.
 
@@ -183,11 +193,7 @@ def nbis_bozorth3(left, right, **kwargs):
 			for M, name in zip([L, R], ['left', 'right']):
 				# Create minutiae file
 				min_path = os.path.join(currdir, '{}-{}-{}.xyt'.format(name, id(L), id(R)))
-				M = np.array([(m['x'], m['y'], m['direction'], m['reliability']) for m in L])
-				M[:,2] = np.round(np.rad2deg(nbis_idx2angle(M[:,2], N=16)))
-				M[:,3] = np.round(M[:,3] * 100.0)
-				M = M.astype(int)
-				M = M[M[:,3] > np.percentile(M[:,3], 5), :]
+				M = minutiae_selection(M)
 				pd.DataFrame(M).to_csv(min_path, **to_csv_options)
 				# Append path of such a file to a file with the list of mates
 				mfile.write(min_path+'\n')
