@@ -17,7 +17,7 @@ from joblib import Parallel, delayed, Memory
 
 class FingerprintMatcher(BaseEstimator, ClassifierMixin):
     def __init__(self):
-        self.memory = Memory('./joblib_cache', verbose=0)
+        self.memory = Memory('./joblib_cache', verbose=10)
         self.compute_lro = self.memory.cache(self.compute_lro)
 
     def __del__(self):
