@@ -97,6 +97,7 @@ class AnGaFISMatcherRefinement(FingerprintMatcher):
 
 class AnGaFISMatcherLRO(FingerprintMatcher):
     def __init__(self):
+        super().__init__()
         self.params = {}
         self.lro_estimator = AnGaFIS_OF_Estimator()
         self.lro_estimator.segmentor.set_params(enhanceOnly=False)
@@ -130,6 +131,7 @@ class AnGaFISMatcherLRO(FingerprintMatcher):
 
 class NBISMatcher(FingerprintMatcher):
     def __init__(self, slit_range_thresh=10):
+        super().__init__()
         self.params = {
             'slit_range_thresh': slit_range_thresh,
         }

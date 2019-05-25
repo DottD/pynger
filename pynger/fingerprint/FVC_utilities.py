@@ -248,7 +248,7 @@ def loadMatchingDatasetFVC(path: str):
     def _load_challenge(mfa, mfr):
         " Load a challenge, given as a pair of index files "
         out = []
-        for ifile, gt in zip([mfa, mfr], [1, 0]):
+        for ifile, gt in zip([mfa, mfr], [0, 1]):
             dir_ = os.path.dirname(ifile)
             with open(ifile, 'r') as file_:
                 for line in file_:
