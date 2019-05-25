@@ -12,10 +12,16 @@ from pynger.fingerprint.nbis import compute_lro as nbis_lro
 from pynger.fingerprint.nbis_wrapper import nbis_angle2idx, nbis_idx2angle, nbis_bozorth3
 from pynger.fingerprint.tuning_lro import AnGaFIS_OF_Estimator_Complete, AnGaFIS_OF_Estimator
 
-from joblib import Parallel, delayed
+from joblib import Parallel, delayed, Memory
 
 
 class FingerprintMatcher(BaseEstimator, ClassifierMixin):
+    def __init__(self):
+        self.memory = Memory('./joblib_cache', verbose=0)
+        self.compute_lro = self.memory.cache(self.compute_lro)
+
+    def __del__(self):
+        self.memory.clear(warn=False)
 
     def compute_lro(self, img, blkoffs, num_dir, params):
         raise NotImplementedError("Derived class must reimplement this method")
@@ -57,6 +63,7 @@ class FingerprintMatcher(BaseEstimator, ClassifierMixin):
 
 class AnGaFISMatcherRefinement(FingerprintMatcher):
     def __init__(self):
+        super().__init__()
         self.params = {}
         self.lro_estimator = AnGaFIS_OF_Estimator_Complete()
         self.lro_estimator.segmentor.set_params(enhanceOnly=False)
