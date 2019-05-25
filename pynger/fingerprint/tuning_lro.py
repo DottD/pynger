@@ -285,6 +285,9 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
             mask = _
         else:
             mask = convert_to_full(mask, **bd_specs)
+        # Ensure that the image has the same shape of the mask (generally smaller)
+        image = image[:mask.shape[0], :mask.shape[1]]
+        # Compute the LRO and convert it to field
         field = self.lro_estimator.compute_of(image, mask, onlyLRO=True)
         field = reliable_iterative_smoothing(image, mask, field, 
             # Take some arguments from the lro_estimator
