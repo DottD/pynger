@@ -205,6 +205,8 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         onlyLRO = bd_specs.pop('onlyLRO', False)
         needComputeMask = mask is None
         if not onlyLRO or needComputeMask:
+            if needComputeMask:
+                self.segmentor.set_params(enhanceOnly=False)
             image, _ = self.segmentor.segment(image.astype('uint8'))
             if needComputeMask:
                 mask = _
@@ -279,8 +281,10 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
     def compute_of(self, image: Image, mask: Mask, **bd_specs) -> Field:
         """ See documentation of super.compute_of """
         pars = inspect.signature(AnGaFIS_OF_Estimator_Complete.__init__)
-        image, _ = self.segmentor.segment(image.astype('uint8'))
         needComputeMask = mask is None
+        if needComputeMask:
+            self.segmentor.set_params(enhanceOnly=False)
+        image, _ = self.segmentor.segment(image.astype('uint8'))
         if needComputeMask:
             mask = _
         else:

@@ -57,6 +57,9 @@ def cmaes_optimize(estimator, X, y, load_imgs,
     Returns:
         The current state of the optimizer, if retFuns is False, otherwise check the retFuns argument.
     """
+    # TODO: rescaling using cmaes parameters
+    # TODO: integer handling through cmaes parameters
+    # TODO: find out why parameters sent to telegram are different
     sample_size = kwargs.get('sample_size', 10)
     n_iter = kwargs.get('n_iter', 10)
     n_jobs = kwargs.get('n_jobs', -1)
