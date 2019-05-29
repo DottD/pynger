@@ -1,6 +1,7 @@
 import os
+import random
 from time import time
-from itertools import zip_longest
+from itertools import zip_longest, combinations
 
 		
 def testTime(fun, rep=10, msg="Function executed in {} seconds on average"):
@@ -51,3 +52,10 @@ def grouper(iterable, n, fillvalue=None):
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+def random_combination(iterable, r):
+    "Random selection from itertools.combinations(iterable, r)"
+    pool = tuple(iterable)
+    n = len(pool)
+    indices = sorted(random.sample(range(n), r))
+    return tuple(pool[i] for i in indices)

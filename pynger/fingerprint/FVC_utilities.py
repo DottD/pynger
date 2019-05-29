@@ -8,7 +8,7 @@ from pynger.types import Image, Mask, Field
 from pynger.fingerprint.tuning_lro import LROEstimator
 from pynger.fingerprint.sampling import convert_to_full, subsample
 from pynger.field.manipulation import polar2cart
-from pynger.misc import recursively_scan_dir_gen, recursively_scan_dir
+from pynger.misc import recursively_scan_dir_gen, recursively_scan_dir, random_combination
 from itertools import combinations, starmap
 
 
@@ -284,28 +284,50 @@ def loadMatchingDatasetFVC(path: str):
             competitions[comp_key] = (challenge_pairs, image_files)
     return competitions
 
-def loadMatchingDatasetNIST(path: str):
+def loadMatchingDatasetNIST(path: str, ratio: float = 2.0, verbose: bool = True):
     """ Load NIST SD04 for matching.
     
     Args: 
         path: Path to the folder containing the images.
+        ratio: Ratio between the number of impostor and genuine matches.
+        verbose: whether to print some basic information about the dataset.
 
     Return:
         A tuple (X, y, lenX) where X yields pairs of images, y generates 0 for a non-match and 1 for a match, lenX is the total number of elements.
     """
     # Load all images
-    _, filenames = recursively_scan_dir(path, ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'])
-    # Load images for each combination of filenames
-    load = lambda x: np.array(PIL.Image.open(x).convert('L'))
-    load2 = lambda x1, x2: tuple([load(x1), load(x2)])
-    X = starmap(load2, combinations(filenames,2))
-    # Compute length of X
-    lenX = int(scipy.special.binom(len(filenames), 2))
-    # Define function that returns ground truth from filename
-    is_match = lambda f1, f2: f1[0] != f2[0] and f1[1:] == f2[1:]
-    # Remove path from filenames
-    filenames = list(map(lambda x: os.path.splitext(os.path.basename(x))[0], filenames))
-    # Get ground truth from filenames
-    y = map(int, starmap(is_match, combinations(filenames,2)))
+    _, image_files = recursively_scan_dir(path, ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'])
+    # Split between first and second impression
+    f_image_files = list(filter(lambda s: os.path.basename(s)[0]=='f', image_files))
 
-    return X, y, lenX
+    # Collect the genuine matches
+    challenge_pairs = []
+    for ffile in f_image_files:
+        basename = os.path.basename(ffile)
+        basename = 's'+basename[1:]
+        sfile = os.path.join( os.path.dirname(ffile), basename )
+        challenge_pairs.append( ((ffile, sfile), 1) )
+
+    # Get the total number of impostor and genuine matches
+    genuine_matches = len(challenge_pairs)
+    impostor_matches = int(genuine_matches * ratio)
+    total_matches = genuine_matches + impostor_matches
+    if verbose:
+        print('{} genuine matches and {} impostor matches will be selected'.format(genuine_matches, impostor_matches))
+
+    # Collect the impostor matches:
+    while True:
+        pair = random_combination(image_files, 2)
+        left_bname = os.path.basename(pair[0])
+        right_bname = os.path.basename(pair[1])
+        if left_bname[1:] == right_bname[1:]:
+            continue # genuine or the same image
+        else:
+            challenge_pairs.append( (pair, 0) )
+        if len(challenge_pairs) >= total_matches:
+            break
+
+    competitions = {
+        ('NIST', 'SD04', '_'): (challenge_pairs, image_files)
+    }
+    return competitions

@@ -39,7 +39,7 @@ class FingerprintMatcher:
             os.makedirs(cache_dir)
         self.cache_dir = cache_dir
         self.memory = Memory(cache_dir, verbose=0)
-        self.compute_lro = self.memory.cache(self.compute_lro)
+        # self.compute_lro = self.memory.cache(self.compute_lro) # useless by now
         self.verbose = verbose
         self.minutiaeLUT = {}
 
