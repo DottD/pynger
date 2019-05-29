@@ -590,8 +590,8 @@ int custom_dirmap(int** direction_map, int mw, int mh, unsigned char* pdata, con
 {
    // Variables
    //  PyObject *dir_array;
-   PyObject *img_array, *blk_array, *result, *new_dir = NULL;
-   npy_intp *dim;
+   PyObject *img_array = NULL, *blk_array = NULL, *result = NULL, *new_dir = NULL;
+   npy_intp *dim = NULL;
 
    // Wrap the input image into an ndarray
    // Note: no need to decref the newly created PyObject, it does not own its data
@@ -608,22 +608,26 @@ int custom_dirmap(int** direction_map, int mw, int mh, unsigned char* pdata, con
       PyErr_SetString(PyExc_RuntimeError, "Error calling the given function on input");
       goto err;
    }
-   // Convert result to numpy array
-   new_dir = PyArray_FROM_OTF(result, NPY_INT, NPY_ARRAY_C_CONTIGUOUS);
-   if (new_dir == NULL){
-      PyErr_SetString(PyExc_RuntimeError, "Error converting the function's result to numpy array");
-      goto err;
+   // Change the direction map only if the function did not returned None
+   // This allows it to prevent modifications of the previous orientation field
+   if (result != Py_None) {
+      // Convert result to numpy array
+      new_dir = PyArray_FROM_OTF(result, NPY_INT, NPY_ARRAY_C_CONTIGUOUS);
+      if (new_dir == NULL){
+         PyErr_SetString(PyExc_RuntimeError, "Error converting the function's result to numpy array");
+         goto err;
+      }
+      // Dimensional check
+      dim = PyArray_DIMS( (PyArrayObject*)new_dir );
+      if (dim[0]!=mh || dim[1]!=mw){
+         PyErr_SetString(PyExc_RuntimeError, "Result dimensions mismatch");
+         goto err;
+      }
+      // Replace the values of direction_map with the new ones
+      free(*direction_map);
+      *direction_map = (npy_int*)PyArray_DATA( (PyArrayObject*)new_dir );
+      PyArray_CLEARFLAGS( (PyArrayObject*)new_dir, NPY_ARRAY_OWNDATA );
    }
-   // Dimensional check
-   dim = PyArray_DIMS( (PyArrayObject*)new_dir );
-   if (dim[0]!=mh || dim[1]!=mw){
-      PyErr_SetString(PyExc_RuntimeError, "Result dimensions mismatch");
-      goto err;
-   }
-   // Replace the values of direction_map with the new ones
-   free(*direction_map);
-   *direction_map = (npy_int*)PyArray_DATA( (PyArrayObject*)new_dir );
-   PyArray_CLEARFLAGS( (PyArrayObject*)new_dir, NPY_ARRAY_OWNDATA );
 
    goto out;
 err:

@@ -230,6 +230,64 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
         else:
             return field
 
+class GaborEstimator(ScoreAngleDiffRMSD, LROEstimator):
+    def __init__(self, ridge_dist: int = 10, number_angles: int = 36, along_sigma_ratio: float = 0.3, ortho_sigma: float = 0.05):
+        """ Initializes and stores all the algorithm's parameters. """
+        self.ridge_dist = ridge_dist
+        self.number_angles = number_angles
+        self.along_sigma_ratio = along_sigma_ratio
+        self.ortho_sigma = ortho_sigma
+        self.segmentor = AnGaFIS_Seg_Estimator(enhanceOnly=True)
+
+    def train_on_data(self, X, y):
+        """ This algorithm does not need any fitting. """
+        pass
+
+    def compute_of(self, image: Image, mask: Mask, **bd_specs) -> Field:
+        """ Computes the orientation field.
+
+        The orientation field returned by this function must be sampled according to the FVC-OnGoing specifications and the parameters specified in ``bd_specs`` keyword arguments.
+        
+        Args:
+            image: Fingerprint original image
+            mask: Foreground mask (sampled as described in FVC-OnGoing)
+
+        Keyword Arguments:
+            border_x: horizontal border (in pixels)
+            border_y: vertical border (in pixels)
+            step_x: horizontal distance between sample points (in pixels)
+            step_y: vertical distance between sample points (in pixels)
+            onlyLRO (bool): whether to perform only the LRO estimation, or, conversely, also preprocessing and subsampling
+        """
+        onlyLRO = bd_specs.pop('onlyLRO', False)
+        needComputeMask = mask is None
+        if not onlyLRO or needComputeMask:
+            if needComputeMask:
+                self.segmentor.set_params(enhanceOnly=False)
+            image, _ = self.segmentor.segment(image.astype('uint8'))
+            if needComputeMask:
+                mask = _
+            else:
+                mask = convert_to_full(mask, **bd_specs)
+        # Ensure that the image has the same shape of the mask (generally smaller)
+        image = image[:mask.shape[0], :mask.shape[1]]
+        # Compute the LRO and convert it to field
+        lro, rel = LRO(
+            image, mask=mask, 
+            ridge_dist=self.ridge_dist,
+            number_angles=self.number_angles,
+            along_sigma_ratio=self.along_sigma_ratio,
+            ortho_sigma=self.ortho_sigma,
+            filter_shape='gabor')
+        field = polar2cart(lro, rel, retField=True)
+        # Eventually downsample the field
+        if not onlyLRO:
+            field = subsample(field, is_field=True, **bd_specs)
+        if needComputeMask:
+            return field, mask
+        else:
+            return field
+
 class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
     def __init__(self,
         LRF_min_disk_size: int = 10,

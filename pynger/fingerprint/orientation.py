@@ -1,10 +1,11 @@
 from warnings import warn
 import numpy as np
 from scipy.signal import argrelmax
-from scipy.ndimage import minimum_filter, map_coordinates, gaussian_filter1d
+from scipy.ndimage import minimum_filter, map_coordinates, gaussian_filter1d, convolve
 from scipy.fftpack import rfft
 from pynger.signal.pani import fast_ani_gauss_filter
 from pynger.signal.windows import circleWin
+from skimage.filters import gabor
 
 
 def LRO(image, **kwargs):
@@ -18,6 +19,7 @@ def LRO(image, **kwargs):
 		number_angles (int): number of angles to be tested (defaults to 36)
 		along_sigma_ratio (float): width of filter along the orientation (relative to ridge distance) (defaults to 0.85)
 		ortho_sigma (float): width of filter orthogonal to the orientation (relative to ridge distance) (defaults to 0.05)
+		filter_shape (str): either 'gauss' or 'gabor'
 		mask (numpy.array or None): Mask indicating the region of interest (same shape of image)
 		
 	Returns:
@@ -28,13 +30,25 @@ def LRO(image, **kwargs):
 	num = kwargs.get('number_angles', 36)
 	along_sigma = kwargs.get('along_sigma_ratio', 0.3) * ridge_dist
 	ortho_sigma = kwargs.get('ortho_sigma', 0.05) * ridge_dist
+	filter_shape = kwargs.get('filter_shape', 'gauss')
 	# LRO Estimation
 	lro_x = np.zeros(image.shape)
 	lro_y = np.zeros_like(lro_x)
 	resp_inf_norm = np.zeros(image.shape)
 	resp_2_norm = np.zeros(image.shape)
 	for _, theta in enumerate(np.linspace(0., np.pi, num, endpoint=False)):
-		response = fast_ani_gauss_filter(image, ortho_sigma, along_sigma, np.rad2deg(theta), 1, 0)
+		if filter_shape == 'gauss':
+			response = fast_ani_gauss_filter(image, ortho_sigma, along_sigma, np.rad2deg(theta), 1, 0)
+		elif filter_shape == 'gabor':
+			# x direction corresponds to ortho-direction before
+			response, _ = gabor(
+				image/image.max(),
+				frequency=0.12, # suggested 60 cycles/512 px width
+				theta=theta,
+				bandwidth=2.5, # suggested by the paper Lin Hong, Jian, A., Pankanti, S., & Bolle, R. (n.d.). Fingerprint enhancement. Proceedings Third IEEE Workshop on Applications of Computer Vision. WACV’96. doi:10.1109/acv.1996.572056 
+				mode='wrap')
+		else:
+			raise NotImplementedError('Unknown filter shape')
 		response = np.fabs(response)
 		response = fast_ani_gauss_filter(response, ridge_dist, ridge_dist, 0, 0, 0)
 		lro_x += response * np.cos(2*theta)

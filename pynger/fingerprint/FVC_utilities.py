@@ -240,41 +240,49 @@ def loadMatchingDatasetFVC(path: str):
         path: Directory with the FVC-TEST dataset.
 
     Return:
-        A generator of tuples (X, y, descr) where X has the pair of image filenames, y is the corresponding ground truth label, i.e. a 0 for reject or 1 for accept, descr contains a reference to the database and competition where the images in X belong.
+        A dictionary whose keys are pairs of:
+        - tuples containing a reference to the database and competition where the images belong, and values are lists of pairs (X, y) where X has the pair of image filenames, and y is the corresponding ground truth label, i.e. a 0 for reject or 1 for accept;
+        - the list of all images found in the given folder.
     """
+    _, all_image_files = recursively_scan_dir(path, '.tif')
+
     _, index_files = recursively_scan_dir(path, '.MFA')
     comp_pattern = re.compile('(FVC\\d+)')
     
-    def _load_challenge(mfa, mfr):
-        " Load a challenge, given as a pair of index files "
-        out = []
-        for ifile, gt in zip([mfa, mfr], [0, 1]):
-            dir_ = os.path.dirname(ifile)
-            with open(ifile, 'r') as file_:
-                for line in file_:
-                    file1, file2 = line.split()
-                    path1 = os.path.join(dir_, db_name, file1)
-                    path2 = os.path.join(dir_, db_name, file2)
-                    out.append( ((path1, path2), gt) )
-        return out
-
-    out = []
-    for index in index_files:
-        # Get index for false matches
-        index2 = index[:-1]+'R'
-        # Retrieve competition
-        match = comp_pattern.search(index)
-        if match:
-            competition = match[1]
-        else:
-            competition = 'NULL'
-        # Retrieve database type (a or b)
-        db_type = index[-5].lower()
-        # Loop over the four possible databases
-        for db_n in range(1, 5):
+    competitions = {}
+    # Loop over the four possible databases
+    for db_n in range(1, 5):
+        for MFA in index_files:
+            # Get index for false matches
+            MFR = MFA[:-1]+'R'
+            # Retrieve competition
+            match = comp_pattern.search(MFA)
+            if match:
+                competition = match[1]
+            else:
+                competition = 'NULL'
+            # Retrieve database type (a or b)
+            db_type = MFA[-5].lower()
+            # Create a new key for this competition
+            comp_key = (competition, db_n, db_type)
+            competitions[comp_key] = []
+            # Generate database name
             db_name = 'Db{}_{}'.format(db_n, db_type)
-            out.append( ( _load_challenge(index, index2), (competition, db_n, db_type) ) )
-    return out
+            # Take the subset of images related to this dataset
+            image_files = [name for name in all_image_files if db_name in name]
+            # Load all the pairs that will be matched
+            challenge_pairs = []
+            for ifile, gt in zip([MFA, MFR], [0, 1]):
+                dir_ = os.path.dirname(ifile)
+                with open(ifile, 'r') as file_:
+                    for line in file_:
+                        file1, file2 = line.split()
+                        path1 = os.path.join(dir_, db_name, file1)
+                        path2 = os.path.join(dir_, db_name, file2)
+                        challenge_pairs.append( ((path1, path2), gt) )
+            # Update the competition dictionary
+            competitions[comp_key] = (challenge_pairs, image_files)
+    return competitions
 
 def loadMatchingDatasetNIST(path: str):
     """ Load NIST SD04 for matching.

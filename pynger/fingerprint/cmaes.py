@@ -244,6 +244,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
                     except Exception as err:
                         print("Cannot send message to Bot due to", err)
                         continue
+                search_results.logger.add() # should add some log data
                 # ---------------
     except KeyboardInterrupt:
         print("Interrupted by the user")

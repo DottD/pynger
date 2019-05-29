@@ -1,5 +1,6 @@
 import os
 from time import time
+from itertools import zip_longest
 
 		
 def testTime(fun, rep=10, msg="Function executed in {} seconds on average"):
@@ -44,3 +45,9 @@ def recursively_scan_dir_gen(path, ending):
 	for curr_dir, _, local_files in os.walk(path):
 		for x in filter(lambda x: x.endswith(ending), local_files):
 			yield os.path.join(curr_dir, x)
+
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)

@@ -214,7 +214,7 @@ def nbis_bozorth3(left, right, **kwargs):
 		scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
 		# score = int(proc.stdout.read())
 		if verbose:
-			print("Score", score)
+			print("Score", scores)
 	# Remove all files listed in mates_file
 	with open(mates_file, 'r') as mfile:
 		for path in mfile:
