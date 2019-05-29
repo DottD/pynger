@@ -123,35 +123,40 @@ class FingerprintMatcher:
         def _scores_from_batch(batch):
             """ Computes the scores for a batch with couples of file paths. """
             # Filter out null elements, coming from the last batch
-            batch = filter(None, batch)
+            # batch = filter(None, batch)
             # Create the mates file
-            mates_file = os.path.join(self.cache_dir, '{}{}{}.lis'.format(id(self), id(batch), time.time()))
-            excluded = []
-            with open(mates_file, 'w') as f:
-                for n, pair in enumerate(batch):
-                    if pair[0] in self.minutiaeLUT and pair[1] in self.minutiaeLUT:
-                        f.write(self.minutiaeLUT[pair[0]]+'\n')
-                        f.write(self.minutiaeLUT[pair[1]]+'\n')
-                    else:
-                        excluded.append(n)
+            # mates_file = os.path.join(self.cache_dir, '{}{}{}.lis'.format(id(self), id(batch), time.time()))
+            # excluded = []
+            # with open(mates_file, 'w') as f:
+            #     for n, pair in enumerate(batch):
+            #         if pair[0] in self.minutiaeLUT and pair[1] in self.minutiaeLUT:
+            #             f.write(self.minutiaeLUT[pair[0]]+'\n')
+            #             f.write(self.minutiaeLUT[pair[1]]+'\n')
+            #         else:
+            #             excluded.append(n)
+            if batch[0] not in self.minutiaeLUT or batch[1] not in self.minutiaeLUT:
+                return None
             # Run matcher
             exe_path = os.path.join(__NBIS_LIB__, 'bin', 'bozorth3')
-            command = "{} -M \"{}\"".format(exe_path, mates_file)
+            # command = "{} -M \"{}\"".format(exe_path, mates_file)
+            command = "{} \"{}\" \"{}\"".format(exe_path, self.minutiaeLUT[batch[0]], self.minutiaeLUT[batch[1]])
             with Popen(command, cwd=self.cache_dir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
                 err = proc.stderr.read()
                 if err != "":
                     raise RuntimeError(err)
                 # Read the list of scores
                 # Splits on newlines and remove empty strings
-                scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
+                # scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
+                scores = int(proc.stdout.read().rstrip())
             # Put Nones where a matching couldn't be executed
-            for n in excluded:
-                scores.insert(n, None)
+            # for n in excluded:
+            #     scores.insert(n, None)
+            # os.remove(mates_file)
             return scores
 
-        X = grouper(X, 256)
+        # X = grouper(X, 256)
         scores = Parallel(verbose=self.verbose, batch_size=512)(delayed(_scores_from_batch)(x) for x in X)
-        scores = list(chain(*scores))
+        # scores = list(chain(*scores))
         
         return scores
 
