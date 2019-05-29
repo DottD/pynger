@@ -269,7 +269,7 @@ def loadMatchingDatasetFVC(path: str):
             # Generate database name
             db_name = 'Db{}_{}'.format(db_n, db_type)
             # Take the subset of images related to this dataset
-            image_files = [name for name in all_image_files if db_name in name]
+            image_files = [name for name in all_image_files if os.path.basename(os.path.dirname(name)) == db_name]
             # Load all the pairs that will be matched
             challenge_pairs = []
             for ifile, gt in zip([MFA, MFR], [0, 1]):
