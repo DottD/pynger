@@ -61,7 +61,7 @@ def subsample(mat: Union[Image,Mask,Field], **kwargs) -> Union[Image,Mask,Field]
     sy = kwargs.get('step_y', 8)
     is_field = kwargs.get('is_field', False)
     smooth = kwargs.get('smooth', False)
-    # Averaging
+    # Averaging
     initial_type = mat.dtype
     initial_dims = len(mat.shape)
     ri = range(by, mat.shape[0]-by+1, sy)

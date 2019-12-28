@@ -57,9 +57,9 @@ def cmaes_optimize(estimator, X, y, load_imgs,
     Returns:
         The current state of the optimizer, if retFuns is False, otherwise check the retFuns argument.
     """
-    # TODO: rescaling using cmaes parameters
-    # TODO: integer handling through cmaes parameters
-    # TODO: find out why parameters sent to telegram are different
+    # TODO: rescaling using cmaes parameters
+    # TODO: integer handling through cmaes parameters
+    # TODO: find out why parameters sent to telegram are different
     sample_size = kwargs.get('sample_size', 10)
     n_iter = kwargs.get('n_iter', 10)
     n_jobs = kwargs.get('n_jobs', -1)
@@ -72,7 +72,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
     # Get a list of independent keys
     nonfixed_keys = [key for key in param_space if key not in fixed_variables]
 
-    # Automatically determine the type of the parameter, based on the input type
+    # Automatically determine the type of the parameter, based on the input type
     nonfixed_types = list(map(type, (v for k,v in initial_params.items() if k in nonfixed_keys)))
     type_fixing = lambda kwa: {kv[0]:t(kv[1]) for kv, t in zip(kwa.items(), nonfixed_types)}
 
@@ -141,21 +141,21 @@ def cmaes_optimize(estimator, X, y, load_imgs,
         """
         kwa = dict(zip(nonfixed_keys, x))
         kwa = decode(kwa)
-        # Convert to appropriate types
+        # Convert to appropriate types
         kwa = type_fixing(kwa)
-        # Add the fixed variables before the computation
+        # Add the fixed variables before the computation
         kwa.update(fixed_variables)
-        # Set parameters
+        # Set parameters
         estimator.set_params(**kwa)
         loss = 1.0 - estimator.score( XX, yy )
         return loss
     
     if load is None:
-        # Get the initial set of parameters, according to the current parameters space and fixed variables
+        # Get the initial set of parameters, according to the current parameters space and fixed variables
         x0 = {k:v for k,v in initial_params.items() if k in nonfixed_keys}
         # The values of each solution will be sorted as the keys of nonfixed_keys
         x0 = [x0[k] for k in nonfixed_keys]
-        # Normalize the initial values
+        # Normalize the initial values
         x0 = list(encode(dict(zip(nonfixed_keys, x0))).values())
 
         options = {
@@ -197,7 +197,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
     try:
         with Parallel(n_processes) as parallel:
             while not search_results.stop():
-                # Load batch
+                # Load batch
                 if sample_size > 0:
                     try:
                         X, y = zip(*next(Xy))
@@ -223,7 +223,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
                 # Test them and compute the update
                 evals = parallel(delayed(fit_fun)(_x) for _x in solutions)
                 search_results.tell(solutions, evals)
-                # Save the parameter search results
+                # Save the parameter search results
                 curiter = search_results.result.iterations
                 curfile = "_{}".format(curiter).join(os.path.splitext(outDir))
                 with open(curfile, "wb") as f:
@@ -244,7 +244,7 @@ def cmaes_optimize(estimator, X, y, load_imgs,
                     except Exception as err:
                         print("Cannot send message to Bot due to", err)
                         continue
-                search_results.logger.add() # should add some log data
+                search_results.logger.add() # should add some log data
                 # ---------------
     except KeyboardInterrupt:
         print("Interrupted by the user")

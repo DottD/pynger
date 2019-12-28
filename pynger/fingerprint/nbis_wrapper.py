@@ -23,9 +23,9 @@ def nist_mkoas(image, **kwargs):
 		exe_path = kwargs.pop('mkoas_exe')
 	except KeyError:
 		exe_path = os.path.join(exedir, 'mkoas')
-	# Get the current timestamp (it will univoquely identify this function call)
+	# Get the current timestamp (it will univoquely identify this function call)
 	timestamp = str(int(time()))
-	# Save the image in the current directory
+	# Save the image in the current directory
 	currdir = str(Path.home())
 	imagefile = os.path.join(currdir, '{}.png'.format(timestamp))
 	Image.fromarray(image).convert('L').save(imagefile)
@@ -34,7 +34,7 @@ def nist_mkoas(image, **kwargs):
 	file_list_path = os.path.join(currdir, "{}_list.txt".format(timestamp))
 	with open(file_list_path, 'w') as f:
 		f.write("{}\n".format(imagefile))
-	# Write prs file 
+	# Write prs file 
 	pars = {
 		# Segmentation
 		"sgmnt_fac_n": 5,
@@ -50,7 +50,7 @@ def nist_mkoas(image, **kwargs):
 		"sgmnt_fac_min": 0.75,
 		"sgmnt_fac_del": 0.05,
 		"sgmnt_slope_thresh": 0.90,
-		# Enhancement
+		# Enhancement
 		"enhnc_rr1": 150,
 		"enhnc_rr2": 449,
 		"enhnc_pow": 0.3,
@@ -75,7 +75,7 @@ def nist_mkoas(image, **kwargs):
 	with open(file_prs_path, 'w') as f:
 		for key, val in pars.items():
 			f.write("{} {}\n".format(key, str(val)))
-	# Run NBIS-MKOAS
+	# Run NBIS-MKOAS
 	command = "\"{}\" \"{}\"".format(exe_path, file_prs_path)
 	with Popen(command, cwd=currdir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
 		err = proc.stderr.read()
@@ -109,13 +109,13 @@ def nist_nfseg(image, **kwargs):
 		exe_path = kwargs.pop('nfseg_exe')
 	except KeyError:
 		exe_path = os.path.join(exedir, 'nfseg')
-	# Get the current timestamp (it will univoquely identify this function call)
+	# Get the current timestamp (it will univoquely identify this function call)
 	timestamp = str(int(time()))
-	# Save the image in the current directory
+	# Save the image in the current directory
 	currdir = str(Path.home())
 	imagefile = os.path.join(currdir, '{}.png'.format(timestamp))
 	Image.fromarray(image).convert('L').save(imagefile)
-	# Run NBIS-NFSEG
+	# Run NBIS-NFSEG
 	bb = {} # list of bounding boxes
 	command = "\"{}\" 11 0 0 0 0 \"{}\"".format(exe_path, imagefile)
 	with Popen(command, cwd=currdir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
@@ -179,10 +179,10 @@ def nbis_bozorth3(left, right, **kwargs):
 				bozorth3_exe (str): Path to the bozorth3 executable
 	"""
 	verbose = kwargs.get('verbose', False)
-	# Get the full path to the executable
+	# Get the full path to the executable
 	exe_path = os.path.join(os.path.dirname(__file__), 'bozorth3')
 	exe_path = kwargs.get('bozorth3_exe', exe_path)
-	# Save minutiae information to the current directory
+	# Save minutiae information to the current directory
 	currdir = str(Path.home())
 	to_csv_options = {'sep': ' ', 'header': False, 'index': False}
 	mates_file = os.path.join(currdir, 'mates-{}-{}.lis'.format(id(left), id(right)))
@@ -191,11 +191,11 @@ def nbis_bozorth3(left, right, **kwargs):
 	with open(mates_file, 'w') as mfile:
 		for L, R in zip(left, right):
 			for M, name in zip([L, R], ['left', 'right']):
-				# Create minutiae file
+				# Create minutiae file
 				min_path = os.path.join(currdir, '{}-{}-{}.xyt'.format(name, id(L), id(R)))
 				M = minutiae_selection(M)
 				pd.DataFrame(M).to_csv(min_path, **to_csv_options)
-				# Append path of such a file to a file with the list of mates
+				# Append path of such a file to a file with the list of mates
 				mfile.write(min_path+'\n')
 				# Append minutiae list
 				if verbose:
@@ -209,8 +209,8 @@ def nbis_bozorth3(left, right, **kwargs):
 		err = proc.stderr.read()
 		if err != "":
 			raise RuntimeError(err)
-		# Read the list of scores
-		# Splits on newlines and remove empty strings
+		# Read the list of scores
+		# Splits on newlines and remove empty strings
 		scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
 		# score = int(proc.stdout.read())
 		if verbose:

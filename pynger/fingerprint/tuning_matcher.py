@@ -68,7 +68,7 @@ class FingerprintMatcher:
         X = list(X)
         # Create a function with fixed paramters
         def field_compute(padded_img, blkoffs, num_dir):
-            # Get border and step information
+            # Get border and step information
             i, j = np.unravel_index(blkoffs, shape=padded_img.shape)
             bd_specs = {
                 'border_x': j[0,0],
@@ -81,7 +81,7 @@ class FingerprintMatcher:
                 return None
             # Average pooling on field
             field = subsample(field, is_field=True, **bd_specs, smooth=True, policy='nist')
-            # Convert field to index
+            # Convert field to index
             lro = angle(field, keepDims=False)
             idx = nbis_angle2idx(lro, N=num_dir)
             # Eventually apply a mask
@@ -105,13 +105,13 @@ class FingerprintMatcher:
         for x, M in zip(X, minutiae):
             if M is None:
                 continue
-            # Create a filename that hopefully is not taken by other objects
+            # Create a filename that hopefully is not taken by other objects
             filename = '{}{}{}.xyt'.format(id(self), id(M), time.time())
-            # Save minutiae to file
+            # Save minutiae to file
             filepath = os.path.join(self.cache_dir, filename)
             to_csv_options = {'sep': ' ', 'header': False, 'index': False}
             pd.DataFrame(M).to_csv(filepath, **to_csv_options)
-            # Record the filepath in a dictionary
+            # Record the filepath in a dictionary
             self.minutiaeLUT[x] = filepath
 
     def match_scores(self, X):
@@ -124,7 +124,7 @@ class FingerprintMatcher:
             """ Computes the scores for a batch with couples of file paths. """
             # Filter out null elements, coming from the last batch
             # batch = filter(None, batch)
-            # Create the mates file
+            # Create the mates file
             # mates_file = os.path.join(self.cache_dir, '{}{}{}.lis'.format(id(self), id(batch), time.time()))
             # excluded = []
             # with open(mates_file, 'w') as f:
@@ -144,11 +144,11 @@ class FingerprintMatcher:
                 err = proc.stderr.read()
                 if err != "":
                     raise RuntimeError(err)
-                # Read the list of scores
-                # Splits on newlines and remove empty strings
+                # Read the list of scores
+                # Splits on newlines and remove empty strings
                 # scores = [int(k) for k in filter(None, proc.stdout.read().split('\n'))]
                 scores = int(proc.stdout.read().rstrip())
-            # Put Nones where a matching couldn't be executed
+            # Put Nones where a matching couldn't be executed
             # for n in excluded:
             #     scores.insert(n, None)
             # os.remove(mates_file)
@@ -210,11 +210,11 @@ class NBISMatcher(FingerprintMatcher):
         super().__init__(*args, **kwargs)
 
     def compute_lro(self, padded_img, bd_specs, num_dir):
-        # Returning None does not modify the direction map computed by NBIS
+        # Returning None does not modify the direction map computed by NBIS
         return None, None
 
         # preprocess = False
-        # # Eventually preprocess the image and get the foreground mask
+        # # Eventually preprocess the image and get the foreground mask
         # if preprocess:
         #     enhanced = angafis_preprocessing(padded_img, verbose=False)
         #     mask = enhanced > 0
@@ -224,7 +224,7 @@ class NBISMatcher(FingerprintMatcher):
         #     lro_idx, _, _ = nbis_lro(padded_img, **params)
         # lro = nbis_idx2angle(lro_idx, N=num_dir)
         # field = polar2cart(lro, 1, retField=True)
-        # # Get border and step information
+        # # Get border and step information
         # i, j = np.unravel_index(blkoffs, shape=padded_img.shape)
         # border_x = j[0,0]
         # border_y = i[0,0]
@@ -235,7 +235,7 @@ class NBISMatcher(FingerprintMatcher):
         #     field, is_field=True, 
         #     border_x=border_x, border_y=border_y,
         #     step_x=step_x, step_y=step_y, smooth=True, policy='nist')
-        # # Convert field to index
+        # # Convert field to index
         # lro = angle(field, keepDims=False)
         # idx = nbis_angle2idx(lro, N=num_dir)
         # # Eventually apply a mask

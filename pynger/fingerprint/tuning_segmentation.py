@@ -16,7 +16,7 @@ class SegmentationEstimator(BaseEstimator, ClassifierMixin):
         pass
     
     def predict(self, X):
-        # Make prediction
+        # Make prediction
         for img in X:
             _, mask = self.segment(img)
             yield ~mask.astype(bool) # ~ needed for True values on the foreground
@@ -25,7 +25,7 @@ class SegmentationEstimator(BaseEstimator, ClassifierMixin):
         " Get the similarity measure over all the dataset "
         if y is None:
             raise ValueError("A true y must be given")
-        # Split the iterator
+        # Split the iterator
         X1, X2 = itertools.tee(X, 2)
         # Get the predicted y
         pred_y = self.predict(X1)
@@ -34,7 +34,7 @@ class SegmentationEstimator(BaseEstimator, ClassifierMixin):
         return similarity
     
     def score(self, X, y=None):
-        # Compute the average error
+        # Compute the average error
         similarity = self.get_scores(X, y)
         return mean(similarity)
 
@@ -77,7 +77,7 @@ class ScoreOverlapMeasure:
 class ScoreElementwiseAccuracy:
     def compute_error(self, true_mask: Mask, pred_mask: Mask):
         """ Compute the similarity of the two masks as the number of elements of their intersection over their union """
-        # Ensure that masks have binary values
+        # Ensure that masks have binary values
         true_mask = true_mask > 0
         pred_mask = pred_mask > 0
         return balanced_accuracy_score(true_mask.ravel(), pred_mask.ravel())
@@ -89,16 +89,16 @@ class ScoreBaddeleyDissimilarity:
         Note:
             A.J. Baddeley - "An Error Metric for Binary Images"
         """
-        # Ensure that masks have binary values
+        # Ensure that masks have binary values
         true_mask = true_mask > 0
         pred_mask = pred_mask > 0
         # Handle masks filled with the same value
         xor_mask = true_mask ^ pred_mask
         if (~xor_mask).all(): # Masks equal
             return 1.0
-        elif xor_mask.all(): # Masks completely different
+        elif xor_mask.all(): # Masks completely different
             return 0.0
-        # Compute metric
+        # Compute metric
         true_edt = distance_transform_cdt(true_mask, metric='taxicab').astype(float)
         true_edt = np.minimum(true_edt, c)
         true_edt[true_edt < 0] = c # where a distance cannot be computed, set to maximum
@@ -106,7 +106,7 @@ class ScoreBaddeleyDissimilarity:
         pred_edt = np.minimum(pred_edt, c)
         pred_edt[pred_edt < 0] = c
         dist = np.abs(true_edt - pred_edt)
-        dist /= c # c is the maximum possible distance
+        dist /= c # c is the maximum possible distance
         dist = (dist**p).mean()**(1/p)
         return 1.0-dist
 

@@ -9,13 +9,14 @@ import os
 from typing import Iterable
 
 
-# Args parsing, gets the path to the library dirs
+# Args parsing, gets the path to the library dirs
 if '--path' in sys.argv:
     index = sys.argv.index('--path')
     sys.argv.pop(index)  # Removes the '--path'
     lib_dir = sys.argv.pop(index)  # Returns the element after the '--path'
 else:
-	lib_dir = "/Users/MacD/Documents/Libraries/fp-libs"
+	print("Please provide a path to the required libraries")
+	exit(1)
 armadir = os.path.join(lib_dir, 'armadillo-install')
 blasdir = os.path.join(lib_dir, 'openblas-install')
 lapackdir = os.path.join(lib_dir, 'lp-install')
@@ -63,7 +64,7 @@ def find_all_libs(root: str):
 		lib_patt = re.compile('(?:lib)?(\\w+)\\.(?:lib|a)')
 		for dir, _, files in os.walk(path):
 			matches = filter(None, map(lib_patt.match, files))
-			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
+			files = list(set(map(lambda x: x[0], matches))) # use set to produce unique strings
 			if len(files) > 0:
 				yield list(map(lambda x: os.path.join(dir, x), files))
 	extra_objects = get_all_static_libs_in_path(root)
@@ -98,7 +99,7 @@ pani_ext = Extension(
 	include_dirs=[np.get_include()],
 	)
 
-# OpenCV 
+# OpenCV 
 ang_seg_args = []
 ang_seg_link_args = []
 if sys.platform != 'win32':
@@ -108,9 +109,9 @@ if sys.platform.startswith('linux'):
 	ang_seg_link_args += ['-Wl,--verbose']
 extra_objects = find_all_libs(os.path.join(cvdir, 'lib'))
 print('OpenCV extra_objects:', extra_objects)
-# As the linking order matters, put the corelib at the end and the adelib right before
+# As the linking order matters, put the corelib at the end and the adelib right before
 indices = []
-### ADE
+### ADE
 cv_adelib = [lib for lib in extra_objects if 'libade' in lib]
 if len(cv_adelib) > 0:
 	cv_adelib_idx = extra_objects.index(cv_adelib[0])
@@ -125,12 +126,12 @@ cv_zlib = [lib for lib in extra_objects if 'libz' in lib]
 if len(cv_zlib) > 0:
 	cv_zlib_idx = extra_objects.index(cv_zlib[0])
 	indices += [cv_zlib_idx]
-### Reorder
+### Reorder
 indices = [k for k in range(len(extra_objects)) if k not in indices] + indices
 extra_objects = [extra_objects[k] for k in indices]
-# LAPACK
+# LAPACK
 extra_objects += find_all_libs(os.path.join(lapackdir, 'lib'))
-# Envelope with group construct
+# Envelope with group construct
 if sys.platform.startswith('linux'):
 	extra_objects = ['-Wl,--start-group'] + extra_objects + ['-Wl,--end-group']
 print('OpenCV extra_compile_args:', ang_seg_args)
@@ -160,11 +161,11 @@ ang_seg_ext = Extension(
 	extra_objects=extra_objects,
 	)
 
-# Load README file
+# Load README file
 with open("README.md", "r") as fh:
 	long_description = fh.read()
 
-# Install the package
+# Install the package
 ext_modules = [pani_ext, ang_seg_ext]
 if sys.platform != 'win32':
 	ext_modules += [nbis_ext]

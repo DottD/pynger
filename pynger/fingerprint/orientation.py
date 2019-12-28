@@ -40,12 +40,12 @@ def LRO(image, **kwargs):
 		if filter_shape == 'gauss':
 			response = fast_ani_gauss_filter(image, ortho_sigma, along_sigma, np.rad2deg(theta), 1, 0)
 		elif filter_shape == 'gabor':
-			# x direction corresponds to ortho-direction before
+			# x direction corresponds to ortho-direction before
 			response, _ = gabor(
 				image/image.max(),
-				frequency=0.12, # suggested 60 cycles/512 px width
+				frequency=0.12, # suggested 60 cycles/512 px width
 				theta=theta,
-				bandwidth=2.5, # suggested by the paper Lin Hong, Jian, A., Pankanti, S., & Bolle, R. (n.d.). Fingerprint enhancement. Proceedings Third IEEE Workshop on Applications of Computer Vision. WACV’96. doi:10.1109/acv.1996.572056 
+				bandwidth=2.5, # suggested by the paper Lin Hong, Jian, A., Pankanti, S., & Bolle, R. (n.d.). Fingerprint enhancement. Proceedings Third IEEE Workshop on Applications of Computer Vision. WACV’96. doi:10.1109/acv.1996.572056 
 				mode='wrap')
 		else:
 			raise NotImplementedError('Unknown filter shape')
@@ -53,17 +53,17 @@ def LRO(image, **kwargs):
 		response = fast_ani_gauss_filter(response, ridge_dist, ridge_dist, 0, 0, 0)
 		lro_x += response * np.cos(2*theta)
 		lro_y += response * np.sin(2*theta)
-		# Reliability 
+		# Reliability 
 		resp_inf_norm = np.maximum(response, resp_inf_norm)
 		resp_2_norm += response*response
 	lro = np.arctan2(lro_y, lro_x) / 2
-	# Normalize with infinite norm (maximum)
-	# Reliability as the L2-norm inversely rescaled from [1,sqrt(num)] to [0,1]
+	# Normalize with infinite norm (maximum)
+	# Reliability as the L2-norm inversely rescaled from [1,sqrt(num)] to [0,1]
 	safe_mask = resp_inf_norm != 0
 	rel = np.zeros(resp_2_norm.shape)
 	rel[safe_mask] = np.sqrt(resp_2_norm[safe_mask])/resp_inf_norm[safe_mask]
 	rel = 1. - (rel-1.)/(np.sqrt(num)-1.)
-	# Eventually apply the input mask
+	# Eventually apply the input mask
 	mask = kwargs.get('mask', None)
 	if not (mask is None):
 		rel[np.logical_not(mask)] = 0
@@ -107,21 +107,21 @@ def LRF(image, lro, rel, **kwargs):
 	if I.size==0 or J.size==0:
 		warn('No point passed the reliability check', RuntimeWarning)
 		return None
-	# Get segments by interpolation
-	t = np.linspace(-sp_len, sp_len, sp_num) # endpoint included
+	# Get segments by interpolation
+	t = np.linspace(-sp_len, sp_len, sp_num) # endpoint included
 	segments_xy = np.array([[j-np.sin(lro[i,j])*t, i+np.cos(lro[i,j])*t] for i,j in zip(I,J)])
 	segments = map_coordinates(image, [segments_xy[:,0,:], segments_xy[:,1,:]], order=1, prefilter=False)
-	# Compute spectrum of each segment
+	# Compute spectrum of each segment
 	dft = rfft(segments, axis=1)**2
 	spectrum = np.zeros((dft.shape[0], dft.shape[1]//2+1))
 	spectrum[:,0] = 0 # null DC component (zero mean)
 	if sp_num % 2 == 0: # even
 		spectrum[:,1:-1] = dft[:,1:-1:2]+dft[:,2:-1:2]
 		spectrum[:,-1] = dft[:,-1]
-	else: # odd
+	else: # odd
 		spectrum[:,1:] = dft[:,1::2]+dft[:,2::2]
 	smoothed = gaussian_filter1d(spectrum, sigma*sp_len, axis=1)
-	# Find the first peak, then the frequency
+	# Find the first peak, then the frequency
 	max_i, max_j = argrelmax(smoothed, axis=1, order=2)
 	if max_i.size==0 or max_j.size==0:
 		warn('No peak found in spectrum segments', RuntimeWarning)
@@ -134,7 +134,7 @@ def LRF(image, lro, rel, **kwargs):
 	# 		last = i
 	# fs *= sp_len / (2*smoothed.shape[0])
 	# return fs
-	### 
+	### 
 	mi, mi_idx = np.unique(max_i, return_index=True)
 	mj = max_j[mi_idx]
 	freq = np.fft.fftfreq(sp_num, d=(2*sp_len)/(sp_num-1))

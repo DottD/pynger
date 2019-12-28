@@ -124,7 +124,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         warn("Skipped iterative smoothing", RuntimeWarning)
         return field
 
-    # Check the mask parameter
+    # Check the mask parameter
     if mask is None:
         mask = np.ones(image.shape, dtype=bool)
     else:
@@ -143,10 +143,10 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         'mask': mask,
     }
     field1 = polar2cart(*LRO(image, **local_kwargs), retField=True)
-    # Double the phase angle to comply with operators requirements
+    # Double the phase angle to comply with operators requirements
     field1 = double_angle(field1)
 
-    # Perform the smoothing of the original field
+    # Perform the smoothing of the original field
     local_kwargs = {
         'radius': kwargs.get('SM1_radius_factor', 1) * period,
         'sample_dist': kwargs.get('SM1_sample_dist', 1),
@@ -164,7 +164,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     no_deltas_mask = np.logical_not(deltas_mask)
 
     # Erosion and gaussian blurring are applied to the mask.
-    # This way we are ensured that deltas are fully excluded from the mask.
+    # This way we are ensured that deltas are fully excluded from the mask.
     no_deltas_mask = np.logical_and(no_deltas_mask, mask)
     no_deltas_mask = distance_erosion(no_deltas_mask, kwargs.get('DM1_shrink_rad_factor', 3.5) * period)
     no_deltas_fuzzy = gaussian_filter(no_deltas_mask, kwargs.get('DM1_blur_stddev', 0.5 * period))
@@ -182,10 +182,10 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
         'mask': mask,
     }
     field2 = polar2cart(*LRO(image, **local_kwargs), retField=True)
-    # Double the phase angle to comply with operators requirements
+    # Double the phase angle to comply with operators requirements
     field2 = double_angle(field2)
 
-    # Perform the adjusting of the two fields
+    # Perform the adjusting of the two fields
     local_kwargs = {
         'radius': kwargs.get('SM2_radius_factor', 0.7) * period,
         'sample_dist': kwargs.get('SM2_sample_dist', 1),
@@ -194,13 +194,13 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     afield1 = adjuster(field1, **local_kwargs)
     afield2 = adjuster(field2, **local_kwargs)
 
-    # Compute the fuzzy difference mask and intersect with the initial one, then blur the mask and apply a threshold to convert it into a binary mask.
+    # Compute the fuzzy difference mask and intersect with the initial one, then blur the mask and apply a threshold to convert it into a binary mask.
     fuzzy_diff = magnitude(normalize(afield1) - normalize(afield2), keepDims=False) / 2
     fuzzy_diff[np.logical_not(mask)] = 0.0
     fuzzy_diff = gaussian_filter(fuzzy_diff, kwargs.get('DMASK2_blur_stddev', 0.5 * period))
     binary_diff = fuzzy_diff > kwargs.get('DMASK2_threshold', 0.3)
 
-    # Suppress all the components with too low distance from their center of mass, then perform a dilation
+    # Suppress all the components with too low distance from their center of mass, then perform a dilation
     binary_diff = ccomp_select_cmass(binary_diff, kwargs.get('DMASK2_ccomp_ext_thres', 1) * period)
     binary_diff = gaussian_dilation(binary_diff, kwargs.get('DMASK2_dil_rad_factor', 3) * period)
 
@@ -217,7 +217,7 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     ldmask = drifter_mask(afield1, markLoops=True, markDeltas=True, **local_kwargs)
     ldmask = np.logical_and(ldmask, distance_erosion(mask, kwargs.get('DM3_shrink_rad_factor', 3.5) * period))
 
-    # Suppress all the components with too low distance from their center of mass, then perform a dilation
+    # Suppress all the components with too low distance from their center of mass, then perform a dilation
     ldmask = ccomp_select_cmass(ldmask, kwargs.get('DM3_ccomp_ext_thres', 0.75) * period)
 
     # Remove the elements present in the previous difference mask
@@ -225,14 +225,14 @@ def reliable_iterative_smoothing(image: Image, mask: Mask, field: Field, **kwarg
     ldmask = gaussian_dilation(ldmask, kwargs.get('DM3_dil_rad_factor', 2) * period)
     ldmask = np.logical_not(ldmask)
 
-    # Iterative smoothing
+    # Iterative smoothing
     local_kwargs = _filter_kwargs(kwargs, 'IS_')
     if local_kwargs:
         is_field = iterative_smoothing(afield1, ldmask, period, **local_kwargs)
     else:
         is_field = iterative_smoothing(afield1, ldmask, period)
 
-    # Halves the phase angle, to comply with the input format
+    # Halves the phase angle, to comply with the input format
     is_field = halve_angle(is_field)
 
     return is_field
@@ -259,13 +259,13 @@ def iterative_smoothing(field: Field, mask: Mask, period: float, **kwargs) -> Fi
     Return: 
         The enhanced field.
     """
-    _mask = mask.copy() # this will be referred to as the global mask
+    _mask = mask.copy() # this will be referred to as the global mask
     _field = field.copy()
     step = 0
     max_iter = kwargs.get('max_iterations', 10)
     bin_lev = kwargs.get('DMASK_bin_level', 0.1)
     while np.count_nonzero(_mask) > 0 and step != max_iter:
-        # Perform the smoothing of the field
+        # Perform the smoothing of the field
         local_kwargs = {
             'radius': kwargs.get('SMOOTH_radius_factor', 1.5) * period,
             'sample_dist': kwargs.get('SMOOTH_sample_dist', 1.0),
@@ -277,15 +277,15 @@ def iterative_smoothing(field: Field, mask: Mask, period: float, **kwargs) -> Fi
         binary_diff = fuzzy_diff > bin_lev
         # Erode the global mask to ensure convergence
         _mask = gaussian_erosion(_mask, kwargs.get('GMASK_erode_rad_factor', 0.1) * period)
-        # Combine it with the local mask
+        # Combine it with the local mask
         _mask = np.logical_and(_mask, binary_diff)
-        # Dilate and blur the global mask
+        # Dilate and blur the global mask
         fuzzy_mask = gaussian_dilation(_mask, kwargs.get('GMASK_dilate_rad_factor', 2.0) * period)
         fuzzy_mask = gaussian_filter(fuzzy_mask, kwargs.get('GMASK_blur_stddev', 0.5 * period))
         _field = _loc_field * fuzzy_mask[:,:,None] + _field * (1 - fuzzy_mask)[:,:,None]
-        # Increase the difference mask binarization level, to ensure convergence
+        # Increase the difference mask binarization level, to ensure convergence
         bin_lev += kwargs.get('binlev_step', 0.01)
-        # Update step
+        # Update step
         step += 1
 
     return _field

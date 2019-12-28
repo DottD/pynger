@@ -86,7 +86,7 @@ class FieldProxy(Proxy):
         with open(path, 'rb') as f:
             # Read and discard the header. To visualize -> print(f.read(8).decode('ascii'))
             f.read(8)
-            # Read the field specifications
+            # Read the field specifications
             get_next_int = lambda: int.from_bytes(f.read(4), byteorder='little', signed=True)
             self.border_x = get_next_int()
             self.border_y = get_next_int()
@@ -143,7 +143,7 @@ class FieldProxy(Proxy):
             mask = self.mask
         with open(path, 'wb') as f:
             f.write("DIRIMG00".encode('ascii'))
-            # Read the field specifications
+            # Read the field specifications
             put_int = lambda n: f.write(int(n).to_bytes(4, byteorder='little', signed=True))
             put_int(bx)
             put_int(by)
@@ -152,7 +152,7 @@ class FieldProxy(Proxy):
             rows, cols = angle.shape
             put_int(cols)
             put_int(rows)
-            # Values conversion
+            # Values conversion
             angle *= 255.0 / np.pi
             angle = angle.astype(int)
             mask = mask.astype(int)
@@ -179,18 +179,18 @@ def loadDataset(path: str, loadGT: bool = True):
             name, step, bd = line.split()
             step = int(step)
             bd = int(bd)
-            # Load image
+            # Load image
             image_path = os.path.join(os.path.dirname(path), name)
             image = np.array(PIL.Image.open(image_path).convert('L')).astype(float)
-            # Load mask
+            # Load mask
             mask_path = os.path.splitext(image_path)[0]+'.fg'
             mask = MaskProxy().read(mask_path)
-            # Set specifications
+            # Set specifications
             specs = [bd, bd, step, step]
             # Adjust image shape
             _mask = convert_to_full(mask, border_x=bd, border_y=bd, step_x=step, step_y=step, mode='constant')
             image = image[:_mask.shape[0], :_mask.shape[1]]
-            # Load the ground truth field
+            # Load the ground truth field
             if loadGT:
                 field_path = os.path.splitext(image_path)[0]+'.gt'
                 lro, _ = FieldProxy().read(field_path, full=False)
@@ -225,9 +225,9 @@ def loadSegmentationDataset(sdir: str, odir: str):
         if match:
             ofile = os.path.join(
                 odir,
-                match[1], # FVCxxxx
+                match[1], # FVCxxxx
                 'Dbs',
-                # converts DB1 to Db1, them appends an 'a' for the first 100 images, and a 'b' otherwise
+                # converts DB1 to Db1, them appends an 'a' for the first 100 images, and a 'b' otherwise
                 match[2].title() + '_' + ('a' if int(match[3])<=100 else 'b'),
                 '{}_{}.tif'.format(match[3], match[4]) # append the filename
                 )
@@ -250,10 +250,10 @@ def loadMatchingDatasetFVC(path: str):
     comp_pattern = re.compile('(FVC\\d+)')
     
     competitions = {}
-    # Loop over the four possible databases
+    # Loop over the four possible databases
     for db_n in range(1, 5):
         for MFA in index_files:
-            # Get index for false matches
+            # Get index for false matches
             MFR = MFA[:-1]+'R'
             # Retrieve competition
             match = comp_pattern.search(MFA)
@@ -263,14 +263,14 @@ def loadMatchingDatasetFVC(path: str):
                 competition = 'NULL'
             # Retrieve database type (a or b)
             db_type = MFA[-5].lower()
-            # Create a new key for this competition
+            # Create a new key for this competition
             comp_key = (competition, db_n, db_type)
             competitions[comp_key] = []
             # Generate database name
             db_name = 'Db{}_{}'.format(db_n, db_type)
             # Take the subset of images related to this dataset
             image_files = [name for name in all_image_files if os.path.basename(os.path.dirname(name)) == db_name]
-            # Load all the pairs that will be matched
+            # Load all the pairs that will be matched
             challenge_pairs = []
             for ifile, gt in zip([MFA, MFR], [0, 1]):
                 dir_ = os.path.dirname(ifile)
@@ -280,7 +280,7 @@ def loadMatchingDatasetFVC(path: str):
                         path1 = os.path.join(dir_, db_name, file1)
                         path2 = os.path.join(dir_, db_name, file2)
                         challenge_pairs.append( ((path1, path2), gt) )
-            # Update the competition dictionary
+            # Update the competition dictionary
             competitions[comp_key] = (challenge_pairs, image_files)
     return competitions
 
@@ -297,10 +297,10 @@ def loadMatchingDatasetNIST(path: str, ratio: float = 2.0, verbose: bool = True)
     """
     # Load all images
     _, image_files = recursively_scan_dir(path, ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff'])
-    # Split between first and second impression
+    # Split between first and second impression
     f_image_files = list(filter(lambda s: os.path.basename(s)[0]=='f', image_files))
 
-    # Collect the genuine matches
+    # Collect the genuine matches
     challenge_pairs = []
     for ffile in f_image_files:
         basename = os.path.basename(ffile)
@@ -313,15 +313,15 @@ def loadMatchingDatasetNIST(path: str, ratio: float = 2.0, verbose: bool = True)
     impostor_matches = int(genuine_matches * ratio)
     total_matches = genuine_matches + impostor_matches
     if verbose:
-        print('{} genuine matches and {} impostor matches will be selected'.format(genuine_matches, impostor_matches))
+        print('{} genuine matches and {} impostor matches will be selected'.format(genuine_matches, impostor_matches))
 
-    # Collect the impostor matches:
+    # Collect the impostor matches:
     while True:
         pair = random_combination(image_files, 2)
         left_bname = os.path.basename(pair[0])
         right_bname = os.path.basename(pair[1])
         if left_bname[1:] == right_bname[1:]:
-            continue # genuine or the same image
+            continue # genuine or the same image
         else:
             challenge_pairs.append( (pair, 0) )
         if len(challenge_pairs) >= total_matches:

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from pynger.field.manipulation import cart2polar, dprod_2array
-# Only for the visualizer class
+# Only for the visualizer class
 from pynger.fingerprint.operators import _get_circle_coord, _fast_interp_over_circles, _interpolate_over_circles
 from pynger.field.calculus import rot_2d
 from pynger.field.manipulation import halve_angle, normalize, magnitude
@@ -22,7 +22,7 @@ def _get_locations_of_subsampled_vf(sampled_vf_shape, original_vf_shape):
 		raise RuntimeError("Input shapes ({} and {}) must be broadcastable to shape (1, 2)".format(sampled_vf_shape, original_vf_shape))
 	step = np.array(original_vf_shape) / np.array(sampled_vf_shape)
 	if (step < 1).any():
-		raise RuntimeError("Sampling factor in at least one dimension is too low ({})".format(step))
+		raise RuntimeError("Sampling factor in at least one dimension is too low ({})".format(step))
 	x, y = np.meshgrid(np.arange(sampled_vf_shape[1]).astype(float), np.arange(sampled_vf_shape[0]).astype(float))
 	x *= step[1]
 	y *= step[0]
@@ -112,7 +112,7 @@ class VisualizeFieldInterpolation:
 		self.field = field
 		self.rows = field.shape[0]
 		self.cols = field.shape[1]
-		# Compute the coordinates of the field values
+		# Compute the coordinates of the field values
 		i, j = np.meshgrid(range(self.rows), range(self.cols), indexing='ij')
 		self.coord = _get_circle_coord(j, i, radius, num, indexing='xy')
 		# Halve and normalize the input field
@@ -142,15 +142,15 @@ class VisualizeFieldInterpolation:
 			self.evec = rot_2d(self.evec)
 		if emphasis == 'normal':
 			pass
-		# Compute emphasis
+		# Compute emphasis
 		self.weight = dprod_2array(self.nhf, self.evec, axis=2, keepDims=True) **2
-		# Compute total weight
+		# Compute total weight
 		W = self.weight.sum(axis=-1)
 		W[np.isclose(W, 0)].fill(1)
-		# Compute the smoother field (put together the parts of the integral)
+		# Compute the smoother field (put together the parts of the integral)
 		self.vecs = self.signum * self.weight * self.hf
 		self.sfield = self.vecs.sum(axis=-1) / W
-		# Apply the relaxation
+		# Apply the relaxation
 		if isinstance(relax, np.ndarray):
 			self.sfield = (1 - relax)[:,:,None] * self.field + relax[:,:,None] * self.sfield
 		else:
@@ -179,29 +179,29 @@ class VisualizeFieldInterpolation:
 			self.i = self.y
 			
 	def redraw(self):
-		###### 1st plot
+		###### 1st plot
 		self.ax1.clear()
-		# Draw the orientation field
+		# Draw the orientation field
 		vis_orient_field(self.hfield, step=10, color='black', axes=self.ax1)
-		# Draw the current circle
+		# Draw the current circle
 		circlexy = self.coord[self.i, self.j, :, :].squeeze()
 		self.ax1.plot(*circlexy, color='red')
-		# Draw the field in the center of the circle
+		# Draw the field in the center of the circle
 		self.ax1.quiver(self.x, self.y, 
 			self.hfield[self.i, self.j, 0],
 			self.hfield[self.i, self.j, 1],
 			color='red', headlength=0, headaxislength=0, pivot='mid')
-		# Draw the results in the center of the circle
+		# Draw the results in the center of the circle
 		self.ax1.quiver(self.x, self.y, 
 			self.sfield[self.i, self.j, 0],
 			self.sfield[self.i, self.j, 1],
 			color='blue', headlength=0, headaxislength=0, pivot='mid')
 		# Get the vectors along the current circle
 		vecs = self.vecs[self.i, self.j, :, :].T
-		# Draw the vectors over the circle
+		# Draw the vectors over the circle
 		mag = magnitude(vecs[None, :, :], keepDims=False)
 		self.ax1.quiver(circlexy[0,:], circlexy[1,:], vecs[:,0], vecs[:,1], mag, cmap='YlGn')
-		# Set aspect ratio
+		# Set aspect ratio
 		self.ax1.set_aspect('equal', 'box')
 		
 	def offclick(self, event=None):

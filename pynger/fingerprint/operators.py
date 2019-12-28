@@ -60,10 +60,10 @@ def _interpolate_over_circles(field: int, radius, **kwargs):
 	# Read parameters
 	num = kwargs.get('num', 100)
 	axis = kwargs.get('axis', 2)
-	# Create coordinates array 
+	# Create coordinates array 
 	i, j = np.meshgrid(range(field.shape[0]), range(field.shape[1]), indexing='ij')
 	coordinates = _get_circle_coord(i, j, radius, num, indexing='ij')
-	# Swap dim-0 with dim-2 so that along the first dimension there are always (x,y) pairs
+	# Swap dim-0 with dim-2 so that along the first dimension there are always (x,y) pairs
 	coordinates = np.moveaxis(coordinates, 2, 0).reshape(2,-1)
 	# A flip is mandatory since map_coordinates require (i,j) pairs along the first axis
 	# coordinates = np.flipud(coordinates)
@@ -86,9 +86,9 @@ def _fast_interp_over_circles(field, radius, num=100, axis=2):
 		raise RuntimeError("Radius and num must be positive!")
 	if len(field.shape) > 3:
 		raise NotImplementedError('Number of field\'s dimensions shall not exceed 3')
-	# Create coordinates array in (i,j) format
+	# Create coordinates array in (i,j) format
 	coordinates = _get_circle_coord(0, 0, radius, num, indexing='ij')
-	# Kind of NN-interpolation
+	# Kind of NN-interpolation
 	coordinates = np.round(coordinates.squeeze()).astype(int)
 	# A flip is mandatory since below (i,j) pairs along the first axis are required
 	# coordinates = np.flipud(coordinates)
@@ -149,7 +149,7 @@ def generic_operator(field, **kwargs):
 	See Also:
 		:func:`drifterN`, :func:`drifterT`, :func:`smoother`, :func:`adjuster`
 	"""
-	# Handle keyword arguments
+	# Handle keyword arguments
 	radius = kwargs.get('radius', 15)
 	if radius < 1:
 		warn("Generic operator: radius must be positive - the operator returns the input as is")
@@ -192,7 +192,7 @@ def generic_operator(field, **kwargs):
 		nhf = circular_interpolation(nhfield, radius, num=num)
 	else:
 		nhf = None
-	# Define a function that computes the projection of a field onto a reference vector
+	# Define a function that computes the projection of a field onto a reference vector
 	# (among the possible choices)
 	def project(F, ref_vec_descr):
 		if ref_vec_descr == 'none':
@@ -209,16 +209,16 @@ def generic_operator(field, **kwargs):
 				raise NotImplementedError('Reference vector not supported!')
 			proj = dprod_2array(F, rvec, axis=2, keepDims=True)
 		return proj
-	# Compute the signum
+	# Compute the signum
 	signum = project(nhf, concordance)
 	# When two vectors are almost (or fully) orthogonal, the sign should be preserved, otherwise it may lead to frequent oscillations depending on floating point errors
 	signum[np.isclose(np.abs(signum), 0)].fill(1)
 	signum = np.sign(signum)
-	# Compute the emphasis
+	# Compute the emphasis
 	weight = project(nhf, emphasis)
-	# Compute the absolute value to enforce them to be consistent weights
+	# Compute the absolute value to enforce them to be consistent weights
 	weight = np.abs(weight) ** weight_power
-	# Choose the normalization factor
+	# Choose the normalization factor
 	if norm_factor == 'estimated':
 		W = 2 * radius
 	elif norm_factor == 'true':
@@ -226,7 +226,7 @@ def generic_operator(field, **kwargs):
 		W[np.isclose(W, 0)] = 1 # prevents div by 0 errors
 	else:
 		raise NotImplementedError('Normalization factor not supported!')
-	# Compute the resulting field (put together the parts of the integral)
+	# Compute the resulting field (put together the parts of the integral)
 	if field_mod == 'none':
 		mf = circular_interpolation(field, radius, num=num)
 	elif field_mod == 'half_angle':
@@ -246,12 +246,12 @@ def generic_operator(field, **kwargs):
 	rfield = (signum * weight * mf).sum(axis=-1) / W
 	if field_mod != 'none':
 		rfield = double_angle(rfield)
-	# Apply the relaxation
+	# Apply the relaxation
 	if isinstance(relax, np.ndarray):
 		rfield = (1 - relax)[:,:,None] * field + relax[:,:,None] * rfield
 	else:
 		rfield = (1 - relax) * field + relax * rfield
-	# Prevent the element-wise norm to decrease
+	# Prevent the element-wise norm to decrease
 	if norm_fix:
 		rfield = normalize(rfield) * np.maximum(magnitude(rfield), magnitude(field))
 	return rfield
@@ -279,7 +279,7 @@ def drifterT(field, radius=15, sample_dist=4):
 		'relaxation': 1,
 		'emphasis': 'tangent',
 		'concordance': 'tangent',
-		'weight_power': 1, # abs val of weights
+		'weight_power': 1, # abs val of weights
 		'norm_factor': 'true',
 		'norm_fix': False,
 		'field_mod': 'normalized_half_angle'
@@ -306,7 +306,7 @@ def drifterN(field, radius=15, sample_dist=4):
 		'relaxation': 1,
 		'emphasis': 'normal',
 		'concordance': 'normal',
-		'weight_power': 1, # abs val of weights
+		'weight_power': 1, # abs val of weights
 		'norm_factor': 'true',
 		'norm_fix': False,
 		'field_mod': 'normalized_half_angle'
@@ -333,7 +333,7 @@ def drifter_mask(field: Field, threshold: float, radius: int = 15, sample_dist: 
 	cfield = reflection(field)
 	mag = magnitude(drifterT(field, radius, sample_dist)) + magnitude(drifterN(field, radius, sample_dist)) - magnitude(drifterT(cfield, radius, sample_dist)) - magnitude(drifterN(cfield, radius, sample_dist))
 	mag = mag.squeeze()
-	mag -= mag.min() # should be 
+	mag -= mag.min() # should be 
 	mag /= mag.max() # mandatory...
 	markL = lambda: mag > 2 * threshold
 	markD = lambda: mag < - 2 * threshold
@@ -367,8 +367,8 @@ def smoother(field, radius=15, sample_dist=4, relax=1):
 		'relaxation': relax,
 		'emphasis': 'normal',
 		'concordance': 'center',
-		'weight_power': 2, # abs val of weights
-		'norm_factor': 'estimated', # of true they go crazy
+		'weight_power': 2, # abs val of weights
+		'norm_factor': 'estimated', # of true they go crazy
 		'norm_fix': True,
 		'field_mod': 'half_angle'
 	}
@@ -395,8 +395,8 @@ def adjuster(field, radius=15, sample_dist=4, relax=0.9):
 		'relaxation': relax,
 		'emphasis': 'tangent',
 		'concordance': 'tangent',
-		'weight_power': 2, # abs val of weights
-		'norm_factor': 'estimated', # of true they go crazy
+		'weight_power': 2, # abs val of weights
+		'norm_factor': 'estimated', # of true they go crazy
 		'norm_fix': True,
 		'field_mod': 'half_angle'
 	}

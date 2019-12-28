@@ -25,7 +25,7 @@ def rough_segmentation(image: Image, **kwargs):
         A pair with the image and the foreground mask cropped to the relevant part of the mask, or (None, None) in case of an error.
         
     """
-    # Foreground mask
+    # Foreground mask
     ridges = image < np.percentile(image, kwargs.get('bin_level', 30))
     struct_el = circleWin(kwargs.get('bin_close_radius', 10))
     mask = binary_closing(ridges, structure=struct_el, iterations=1)
@@ -55,7 +55,7 @@ def angafis_preprocessing(image: Image, **kwargs):
     Keyword Args:
         verbose (bool): Whether some information should be returned in stdout (defaults to False)
     """
-    # Get the full path to the executable
+    # Get the full path to the executable
     exe_path = os.path.join(os.path.dirname(__file__), 'angafis_preProcessing')
     exe_path = kwargs.get('exe_path', exe_path)
     # Save the input image as file
@@ -65,7 +65,7 @@ def angafis_preprocessing(image: Image, **kwargs):
     outdir = os.path.join(currdir, 'angafis_tmp')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    # Run AnGaFIS preprocessing 
+    # Run AnGaFIS preprocessing 
     command = "\"{}\" \"{}\" \"{}\"".format(exe_path, imagefile, outdir)
     with Popen(command, cwd=outdir, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE) as proc:
     	err = proc.stderr.read()
@@ -73,7 +73,7 @@ def angafis_preprocessing(image: Image, **kwargs):
     		raise RuntimeError(err)
     	if kwargs.get('verbose', False):
     		print(proc.stdout.read())
-    # Get the results
+    # Get the results
     outimage = os.path.join(outdir, 'adjusted.png')
     image = np.array(PIL.Image.open(outimage).convert('L'))
     os.remove(outimage)

@@ -17,7 +17,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
 
     @classmethod
     def serialize_Xrow(cls, image: Image, mask: Mask, specs: List[int]):
-        # specs is [bx, by, sx, sy]
+        # specs is [bx, by, sx, sy]
         # return pickle.dumps((image, mask, specs))
         return (image, mask, specs)
 
@@ -45,7 +45,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
             image, mask, specs = LROEstimator.deserialize_Xrow(lineX)
             gt = LROEstimator.deserialize_yrow(liney)
             bx, by, sx, sy = specs
-            # Check parameter consistency
+            # Check parameter consistency
             required_y = (image.shape[0] - 2*by) // sy + 1
             if required_y != gt.shape[0] or required_y != mask.shape[0]:
                 raise ValueError("At {}. The condition (rows - 2 by) // sy + 1 = sampled_points is not satisfied: ({} - 2*{}) // {} + 1 = {} ≠ {}(gt) or {}(mask)".format(n, image.shape[0], by, sy, required_y, gt.shape[0], mask.shape[0]))
@@ -59,7 +59,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         for n, line in enumerate(X):
             image, mask, specs = LROEstimator.deserialize_Xrow(line)
             bx, by, sx, sy = specs
-            # Check parameter consistency
+            # Check parameter consistency
             required_y = (image.shape[0] - 2*by) // sy + 1
             if required_y != mask.shape[0]:
                 raise ValueError("At {}. The condition (rows - 2 by) // sy + 1 = sampled_points is not satisfied: ({} - 2*{}) // {} + 1 = {} ≠ {}".format(n, image.shape[0], by, sy, required_y, mask.shape[0]))
@@ -75,7 +75,7 @@ class LROEstimator(BaseEstimator, RegressorMixin):
         # Input validation
         # X = self.check_X(X)
 
-        # Make prediction
+        # Make prediction
         for lineX in X:
             image, mask, specs = LROEstimator.deserialize_Xrow(lineX)
             bd_specs = {
@@ -101,11 +101,11 @@ class LROEstimator(BaseEstimator, RegressorMixin):
             raise ValueError("A true y must be given")
         # Check that X and y have correct shape
         # X, y = self.check_X_y(X, y)
-        # Split the iterator
+        # Split the iterator
         X1, X2 = itertools.tee(X, 2)
         # Get the predicted y
         pred_y = self.predict(X1)
-        # Accumulate the average error
+        # Accumulate the average error
         avgerr = []
         for x, py, ty in zip(X, pred_y, y):
             loc_avgerr = self.single_error(x, py, ty)
@@ -167,9 +167,9 @@ class ScoreAngleDiffRMSD:
     
     def compute_error(self, field1: Field, field2: Field, mask: Mask):
         """ Computes the RMSD of the angle differences between field1 and field2. """
-        # Difference matrix
+        # Difference matrix
         diff = angle_diff(angle(field1, keepDims=False), angle(field2, keepDims=False))
-        # Compute Root Mean Square Deviation (RMSD) on foreground mask
+        # Compute Root Mean Square Deviation (RMSD) on foreground mask
         diff = np.rad2deg(diff) ** 2
         return np.sqrt( diff[mask].mean() )
 
@@ -212,9 +212,9 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
                 mask = _
             else:
                 mask = convert_to_full(mask, **bd_specs)
-        # Ensure that the image has the same shape of the mask (generally smaller)
+        # Ensure that the image has the same shape of the mask (generally smaller)
         image = image[:mask.shape[0], :mask.shape[1]]
-        # Compute the LRO and convert it to field
+        # Compute the LRO and convert it to field
         lro, rel = LRO(
             image, mask=mask, 
             ridge_dist=self.ridge_dist,
@@ -222,7 +222,7 @@ class AnGaFIS_OF_Estimator(ScoreAngleDiffRMSD, LROEstimator):
             along_sigma_ratio=self.along_sigma_ratio,
             ortho_sigma=self.ortho_sigma)
         field = polar2cart(lro, rel, retField=True)
-        # Eventually downsample the field
+        # Eventually downsample the field
         if not onlyLRO:
             field = subsample(field, is_field=True, **bd_specs)
         if needComputeMask:
@@ -269,9 +269,9 @@ class GaborEstimator(ScoreAngleDiffRMSD, LROEstimator):
                 mask = _
             else:
                 mask = convert_to_full(mask, **bd_specs)
-        # Ensure that the image has the same shape of the mask (generally smaller)
+        # Ensure that the image has the same shape of the mask (generally smaller)
         image = image[:mask.shape[0], :mask.shape[1]]
-        # Compute the LRO and convert it to field
+        # Compute the LRO and convert it to field
         lro, rel = LRO(
             image, mask=mask, 
             ridge_dist=self.ridge_dist,
@@ -280,7 +280,7 @@ class GaborEstimator(ScoreAngleDiffRMSD, LROEstimator):
             ortho_sigma=self.ortho_sigma,
             filter_shape='gabor')
         field = polar2cart(lro, rel, retField=True)
-        # Eventually downsample the field
+        # Eventually downsample the field
         if not onlyLRO:
             field = subsample(field, is_field=True, **bd_specs)
         if needComputeMask:
@@ -347,9 +347,9 @@ class AnGaFIS_OF_Estimator_Complete(AnGaFIS_OF_Estimator):
             mask = _
         else:
             mask = convert_to_full(mask, **bd_specs)
-        # Ensure that the image has the same shape of the mask (generally smaller)
+        # Ensure that the image has the same shape of the mask (generally smaller)
         image = image[:mask.shape[0], :mask.shape[1]]
-        # Compute the LRO and convert it to field
+        # Compute the LRO and convert it to field
         field = self.lro_estimator.compute_of(image, mask, onlyLRO=True)
         field = reliable_iterative_smoothing(image, mask, field, 
             # Take some arguments from the lro_estimator
