@@ -66,7 +66,7 @@ def LRO(image, **kwargs):
 	# Eventually apply the input mask
 	mask = kwargs.get('mask', None)
 	if not (mask is None):
-		rel *= mask
+		rel[np.logical_not(mask)] = 0
 	return lro, rel
 	
 def LRF(image, lro, rel, **kwargs):
